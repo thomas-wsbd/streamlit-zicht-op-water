@@ -2,7 +2,6 @@ import streamlit as st
 import plotly.express as px
 
 import datetime
-import pyrebase
 
 from helpers import *
 

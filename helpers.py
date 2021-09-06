@@ -1,12 +1,13 @@
-from typing import DefaultDict
 import requests
 import pandas as pd
+import streamlit as st
+import pyrebase
 
 
 def firebaseauth():
     # firebase config
     firebaseConfig = {
-        "apiKey": apikeyfirebase,
+        "apiKey": st.secrets["apikeyfirebase"],
         "authDomain": "users-passwords-streamlit.firebaseapp.com",
         "projectId": "users-passwords-streamlit",
         "databaseURL": "https://users-passwords-streamlit-default-rtdb.europe-west1.firebasedatabase.app/",
@@ -24,8 +25,8 @@ def gettoken():
     url = "https://api.mymobeye.com/Token"
     params = {
         "grant_type": "password",
-        "username": username,
-        "password": password,
+        "username": st.secrets["username"],
+        "password": st.secrets["password"],
     }
     r = requests.post(
         url, data=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
@@ -38,7 +39,7 @@ def getallimei(access_token=gettoken()):
     header = {"Authorization": f"Bearer {access_token}"}
 
     params = {
-        "ApiKey": apikey,
+        "ApiKey": st.secrets["apikey"],
         "UserName": "water@monitech.nl",
         "DateFrom": (pd.Timestamp.today() - pd.Timedelta(days=1)).strftime(
             "%Y-%m-%dT00:00:00"
@@ -55,8 +56,8 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
     url = "https://api.mymobeye.com/api/logdata"
     header = {"Authorization": f"Bearer {access_token}"}
     params = {
-        "ApiKey": apikey,
-        "UserName": "water@monitech.nl",
+        "ApiKey": st.secrets["apikey"],
+        "UserName": st.secret["email"],
         "DateFrom": datefrom.strftime("%Y-%m-%dT00:00:00"),
         "DateTo": dateto.strftime("%Y-%m-%dT00:00:00"),
         "ImeiList": imeilist,
