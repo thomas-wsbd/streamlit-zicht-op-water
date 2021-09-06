@@ -57,7 +57,7 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
     header = {"Authorization": f"Bearer {access_token}"}
     params = {
         "ApiKey": st.secrets["apikey"],
-        "UserName": st.secret["email"],
+        "UserName": st.secrets["email"],
         "DateFrom": datefrom.strftime("%Y-%m-%dT00:00:00"),
         "DateTo": dateto.strftime("%Y-%m-%dT00:00:00"),
         "ImeiList": imeilist,
