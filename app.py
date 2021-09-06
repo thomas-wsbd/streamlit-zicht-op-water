@@ -18,22 +18,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# login #
-# firebase config
-firebaseConfig = {
-    "apiKey": "AIzaSyCxR-Q-0Km_mwPC0EUnan-Nt31gey65rlI",
-    "authDomain": "users-passwords-streamlit.firebaseapp.com",
-    "projectId": "users-passwords-streamlit",
-    "databaseURL": "https://users-passwords-streamlit-default-rtdb.europe-west1.firebasedatabase.app/",
-    "storageBucket": "users-passwords-streamlit.appspot.com",
-    "messagingSenderId": "631896730641",
-    "appId": "1:631896730641:web:bb90c25404c7e1ecb555b0",
-}
-
-# initialize auth
-firebase = pyrebase.initialize_app(firebaseConfig)
-auth = firebase.auth()
-
+# login
+auth = firebaseauth()
 login = st.sidebar.expander("Inloggen", False)
 
 # authentication
@@ -55,8 +41,9 @@ if st.session_state.login:
     st.title("Zicht op Water")
 
     # controls
+    locs = getallimei()
     controls = st.sidebar.expander("Filters", expanded=True)
-    loc = controls.multiselect("Locatie", getallimei())
+    loc = controls.multiselect("Locatie", options=locs, default=[locs[0]])
     start = controls.date_input(
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
