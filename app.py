@@ -53,7 +53,7 @@ if st.session_state.login:
     df = returndf(imeilist=loc, datefrom=start, dateto=end)
     st.plotly_chart(
         px.line(
-            df, color="imei", title=f"Gemeten onttrokken hoeveelheden; {loc}"
+            df, color="imei", title=f"Gemeten onttrokken hoeveelheden; {imeitoname().get(loc)}"
         ).update_layout(
             height=600,
             yaxis_title="gemeten ontrokken hoeveelheid (l/s)",

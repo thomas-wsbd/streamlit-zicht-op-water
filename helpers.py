@@ -1,7 +1,7 @@
-import requests
+import requests, pyrebase
 import pandas as pd
 import streamlit as st
-import pyrebase
+
 
 
 def firebaseauth():
@@ -40,7 +40,7 @@ def getallimei(access_token=gettoken()):
 
     params = {
         "ApiKey": st.secrets["apikey"],
-        "UserName": "water@monitech.nl",
+        "UserName": st.secrets["email"],
         "DateFrom": (pd.Timestamp.today() - pd.Timedelta(days=1)).strftime(
             "%Y-%m-%dT00:00:00"
         ),
@@ -50,6 +50,10 @@ def getallimei(access_token=gettoken()):
 
     r = requests.get(url, data=params, headers=header)
     return pd.DataFrame(r.json())["Imei"].to_list()
+
+def imeitoname():
+    return {"358005099371707": "Frank - Eldert 001",
+            "358005099376755": "Gerard - Eldert 002"}
 
 
 def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
@@ -65,7 +69,6 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
 
     r = requests.get(url, data=params, headers=header)
     df = pd.DataFrame(r.json())
-    print(df)
     df = pd.DataFrame(
         [
             {**val, **{"imei": imei}}
@@ -80,5 +83,6 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
         [value.strip(";-").replace(",", ".") for value in df.Value.astype(str)],
         errors="coerce",
     )
+    df.Value = df.Value * 100 / 3600 # 1 is 100 liter => l/s
 
     return df
