@@ -53,7 +53,7 @@ if st.session_state.login:
     print(loc)
     if loc:
         df = returndf(imeilist=loc, datefrom=start, dateto=end)
-        if end - start > 10:
+        if end - start > datetime.timedelta(days=10):
             df = df.resample('d').mean()
         st.plotly_chart(
             px.bar(
