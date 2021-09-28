@@ -83,6 +83,6 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
         [value.strip(";-").replace(",", ".") for value in df.Value.astype(str)],
         errors="coerce",
     )
-    df.Value = df.Value * 100 / 3600 # 1 is 100 liter => l/s
+    df.Value = df.Value / 1000 # l/uur => m3/uur
 
     return df

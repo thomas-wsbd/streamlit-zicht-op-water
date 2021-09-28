@@ -52,11 +52,11 @@ if st.session_state.login:
     # plot
     df = returndf(imeilist=loc, datefrom=start, dateto=end)
     st.plotly_chart(
-        px.line(
-            df, color="imei", title=f"Gemeten onttrokken hoeveelheden; {imeitoname().get(loc[0])}"
+        px.bar(
+            df, color="imei", title=f"Gemeten onttrokken hoeveelheden in m3/uur; {imeitoname().get(loc[0])}"
         ).update_layout(
             height=600,
-            yaxis_title="gemeten ontrokken hoeveelheid (l/s)",
+            yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
             xaxis_title=None,
         ),
         use_container_width=True,
