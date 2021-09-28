@@ -54,7 +54,7 @@ if st.session_state.login:
     if loc:
         df = returndf(imeilist=loc, datefrom=start, dateto=end)
         if end - start > datetime.timedelta(days=10):
-            df.Value = df.Value.resample('d').mean()
+            df = df.groupby('imei').resample('d').mean().reset_index().set_index('LogDate')
         st.plotly_chart(
             px.bar(
                 df, color="imei", title=f"Gemeten onttrokken hoeveelheden in m3/uur; {imeitoname().get(loc[0])}"
