@@ -77,7 +77,9 @@ if st.session_state.login:
                 xaxis_title=None,
             )
             if cumsum:
-                fig.add_trace(px.line(df.set_index([df.index, "imei"]).unstack().cumsum().stack().reset_index().set_index("LogDate"), color="imei")["data"][0])
+                line = px.line(df.set_index([df.index, "imei"]).unstack().cumsum().stack().reset_index().set_index("LogDate"), color="imei")
+                for i in range(len(line['data'])):
+                    fig.add_trace(line["data"][i])
             st.plotly_chart(
                 fig,
                 use_container_width=True,
@@ -93,7 +95,9 @@ if st.session_state.login:
                 xaxis_title=None,
             )
             if cumsum:
-                fig.add_trace(px.line(df.set_index([df.index, "imei"]).unstack().cumsum().stack().reset_index().set_index("LogDate"), color="imei")["data"][0])
+                line = px.line(df.set_index([df.index, "imei"]).unstack().cumsum().stack().reset_index().set_index("LogDate"), color="imei")
+                for i in range(len(line['data'])):
+                    fig.add_trace(line["data"][i])
             st.plotly_chart(
                 fig,
                 use_container_width=True,
