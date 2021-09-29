@@ -53,7 +53,7 @@ if st.session_state.login:
     # uitleg
     uitleg = st.sidebar.expander("Uitleg", expanded=True)
     uitleg.markdown(
-        "Bij een periode **kleiner dan twee weken** wordt de **gemiddelde** onttrokken hoeveelheid **per uur** gerapporteerd in m3/uur. Bij een periode **groter dan twee weken** wordt de **gemiddelde** onttrokken hoeveelheid **per dag** gerapporteerd in m3/uur."
+        "Bij een periode **kleiner dan twee weken** wordt de onttrokken hoeveelheid **per uur** gerapporteerd in m3/uur. Bij een periode **groter dan twee weken** wordt de onttrokken hoeveelheid **per dag** gerapporteerd in m3/dag."
     )
 
     # plot
@@ -77,7 +77,7 @@ if st.session_state.login:
                 xaxis_title=None,
             )
             if cumu:
-                fig.add_trace(px.line(df.cumsum(), color="imei"))
+                fig.add_trace(px.line(df.cumsum().join(df.imei), color="imei"))
             st.plotly_chart(
                 fig,
                 use_container_width=True,
@@ -93,7 +93,7 @@ if st.session_state.login:
                 xaxis_title=None,
             )
             if cumu:
-                fig.add_trace(px.line(df.cumsum(), color="imei"))
+                fig.add_trace(px.line(df.cumsum().join(df.imei), color="imei"))
             st.plotly_chart(
                 fig,
                 use_container_width=True,
