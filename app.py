@@ -77,8 +77,8 @@ if st.session_state.login:
                 xaxis_title=None,
             )
             if cumsum:
-                print(df.cumsum().join(df.imei))
-                fig.add_trace(px.line(df.cumsum().join(df.imei)))
+                print(df.cumsum().join(df.imei, rsuffix="_imei"))
+                fig.add_trace(px.line(df.cumsum())["data"][0])
             st.plotly_chart(
                 fig,
                 use_container_width=True,
@@ -94,7 +94,7 @@ if st.session_state.login:
                 xaxis_title=None,
             )
             if cumsum:
-                fig.add_trace(px.line(df.cumsum().join(df.imei)))
+                fig.add_trace(px.line(df.cumsum())["data"][0])
             st.plotly_chart(
                 fig,
                 use_container_width=True,
