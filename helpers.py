@@ -77,7 +77,7 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
             )
         ]
     )
-    df.LogDate = pd.to_datetime(df.LogDate)
+    df.LogDate = pd.to_datetime(df.LogDate).dt.round("1H")
     df.set_index("LogDate", inplace=True)
     df.Value = pd.to_numeric(
         [value.strip(";-").replace(",", ".") for value in df.Value.astype(str)],
@@ -85,4 +85,4 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
     )
     df.Value = df.Value / 1000 # l/uur => m3/uur
 
-    return df.resample('1H').first()
+    return df
