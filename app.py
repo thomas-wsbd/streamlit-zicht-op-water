@@ -47,6 +47,7 @@ if st.session_state.login:
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
     end = controls.date_input("Eind datum")
+    cumu = controls.checkbox("Cumulatief toevoegen")
     showdf = controls.checkbox("Laat tabel zien")
 
     # uitleg
@@ -66,29 +67,35 @@ if st.session_state.login:
                 .reset_index()
                 .set_index("LogDate")
             )
+            fig = px.bar(
+                df,
+                color="imei",
+                title=f"Gemeten onttrokken hoeveelheden in m3/dag; {imeitoname().get(loc[0])}",
+            ).update_layout(
+                height=600,
+                yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
+                xaxis_title=None,
+            )
+            if cumu:
+                fig.add_trace(px.line(df.cumsum(), color="imei"))
             st.plotly_chart(
-                px.bar(
-                    df,
-                    color="imei",
-                    title=f"Gemeten onttrokken hoeveelheden in m3/dag; {imeitoname().get(loc[0])}",
-                ).update_layout(
-                    height=600,
-                    yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
-                    xaxis_title=None,
-                ),
+                fig,
                 use_container_width=True,
             )
         else:
+            fig = px.bar(
+                df,
+                color="imei",
+                title=f"Gemeten onttrokken hoeveelheden in m3/uur; {imeitoname().get(loc[0])}",
+            ).update_layout(
+                height=600,
+                yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
+                xaxis_title=None,
+            )
+            if cumu:
+                fig.add_trace(px.line(df.cumsum(), color="imei"))
             st.plotly_chart(
-                px.bar(
-                    df,
-                    color="imei",
-                    title=f"Gemeten onttrokken hoeveelheden in m3/uur; {imeitoname().get(loc[0])}",
-                ).update_layout(
-                    height=600,
-                    yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
-                    xaxis_title=None,
-                ),
+                fig,
                 use_container_width=True,
             )
     if showdf:
