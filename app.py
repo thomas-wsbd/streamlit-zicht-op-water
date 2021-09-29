@@ -56,28 +56,40 @@ if st.session_state.login:
     )
 
     # plot
-    print(loc)
     if loc:
         df = returndf(imeilist=loc, datefrom=start, dateto=end)
         if end - start > datetime.timedelta(days=14):
             df = (
                 df.groupby("imei")
                 .resample("d")
-                .mean()
+                .sum()
                 .reset_index()
                 .set_index("LogDate")
             )
-        st.plotly_chart(
-            px.bar(
-                df,
-                color="imei",
-                title=f"Gemeten onttrokken hoeveelheden in m3/uur; {imeitoname().get(loc[0])}",
-            ).update_layout(
-                height=600,
-                yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
-                xaxis_title=None,
-            ),
-            use_container_width=True,
-        )
+            st.plotly_chart(
+                px.bar(
+                    df,
+                    color="imei",
+                    title=f"Gemeten onttrokken hoeveelheden in m3/dag; {imeitoname().get(loc[0])}",
+                ).update_layout(
+                    height=600,
+                    yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
+                    xaxis_title=None,
+                ),
+                use_container_width=True,
+            )
+        else:
+            st.plotly_chart(
+                px.bar(
+                    df,
+                    color="imei",
+                    title=f"Gemeten onttrokken hoeveelheden in m3/uur; {imeitoname().get(loc[0])}",
+                ).update_layout(
+                    height=600,
+                    yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
+                    xaxis_title=None,
+                ),
+                use_container_width=True,
+            )
     if showdf:
         st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
