@@ -47,7 +47,7 @@ if st.session_state.login:
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
     end = controls.date_input("Eind datum")
-    cumu = controls.checkbox("Cumulatief toevoegen")
+    cumsum = controls.checkbox("Cumulatief toevoegen")
     showdf = controls.checkbox("Laat tabel zien")
 
     # uitleg
@@ -76,8 +76,9 @@ if st.session_state.login:
                 yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
                 xaxis_title=None,
             )
-            if cumu:
-                fig.add_trace(px.line(df.cumsum().join(df.imei), color="imei"))
+            if cumsum:
+                print(df.cumsum().join(df.imei))
+                fig.add_trace(px.line(df.cumsum().join(df.imei)))
             st.plotly_chart(
                 fig,
                 use_container_width=True,
@@ -92,11 +93,11 @@ if st.session_state.login:
                 yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
                 xaxis_title=None,
             )
-            if cumu:
-                fig.add_trace(px.line(df.cumsum().join(df.imei), color="imei"))
+            if cumsum:
+                fig.add_trace(px.line(df.cumsum().join(df.imei)))
             st.plotly_chart(
                 fig,
                 use_container_width=True,
             )
-    if showdf:
-        st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
+        if showdf:
+            st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
