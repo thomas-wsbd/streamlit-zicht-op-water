@@ -85,4 +85,4 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
     )
     df.Value = df.Value / 1000 # l/uur => m3/uur
 
-    return df
+    return df.resample('1H').first()
