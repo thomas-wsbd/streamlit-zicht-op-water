@@ -70,7 +70,7 @@ if st.session_state.login:
             fig = px.bar(
                 df,
                 color="imei",
-                title=f"Gemeten onttrokken hoeveelheden in m3/dag; {imeitoname().get(loc[0])}",
+                title=f"Gemeten onttrokken hoeveelheden in m3/dag; {', '.join([imeitoname().get(l) for l in loc])} (imeis: {loc})",
             ).update_layout(
                 height=600,
                 yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
@@ -88,7 +88,7 @@ if st.session_state.login:
             fig = px.bar(
                 df,
                 color="imei",
-                title=f"Gemeten onttrokken hoeveelheden in m3/uur; {imeitoname().get(loc[0])}",
+                title=f"Gemeten onttrokken hoeveelheden in m3/uur; {', '.join([imeitoname().get(l) for l in loc])} (imeis: {loc})",
             ).update_layout(
                 height=600,
                 yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
