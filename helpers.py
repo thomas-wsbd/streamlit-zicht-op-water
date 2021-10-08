@@ -96,11 +96,11 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
 
 
 def pxmap(loc, meta=meta):
-    meta = meta[meta.imei.isin(loc)]
+    m = meta[meta.imei.isin(loc)]
     px.set_mapbox_access_token(st.secrets["mapboxtoken"])
     return (
         px.scatter_mapbox(
-            meta,
+            m,
             lat="lat",
             lon="lon",
             hover_name="imei",
