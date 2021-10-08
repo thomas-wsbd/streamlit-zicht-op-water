@@ -116,7 +116,7 @@ def pxmap(loc):
             ],
             zoom=12,
         )
-        .update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+        .update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=300)
         .update_traces(marker=dict(size=15, symbol="drinking-water", allowoverlap=True))
     )
 

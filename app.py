@@ -51,7 +51,7 @@ if st.session_state.login:
     showdf = controls.checkbox("Laat tabel zien")
 
     # uitleg
-    uitleg = st.sidebar.expander("Uitleg", expanded=True)
+    uitleg = st.sidebar.expander("Uitleg", expanded=False)
     uitleg.markdown(
         "Bij een periode **kleiner dan twee weken** wordt de onttrokken hoeveelheid **per uur** gerapporteerd in m3/uur. Bij een periode **groter dan twee weken** wordt de onttrokken hoeveelheid **per dag** gerapporteerd in m3/dag."
     )
