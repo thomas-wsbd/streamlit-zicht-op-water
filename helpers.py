@@ -121,7 +121,7 @@ def pxmap(loc):
     )
 
 
-def pxbardaily(df):
+def pxbardaily(df, loc):
     return px.bar(
         df,
         color="imei",
@@ -133,7 +133,7 @@ def pxbardaily(df):
     )
 
 
-def pxbarhourly(df):
+def pxbarhourly(df, loc):
     return px.bar(
         df,
         color="imei",

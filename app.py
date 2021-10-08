@@ -68,7 +68,7 @@ if st.session_state.login:
                 .reset_index()
                 .set_index("LogDate")
             )
-            fig = pxbardaily(df)
+            fig = pxbardaily(df, loc)
             if cumsum:
                 line = pxcumsum(df)
                 for i in range(len(line["data"])):
@@ -80,7 +80,7 @@ if st.session_state.login:
             if showdf:
                 st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
         else:
-            fig = pxbarhourly
+            fig = pxbarhourly(df, loc)
             if cumsum:
                 line = pxcumsum(df)
                 for i in range(len(line["data"])):
