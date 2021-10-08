@@ -19,7 +19,7 @@ st.set_page_config(
 
 # login
 auth = firebaseauth()
-login = st.sidebar.expander("Inloggen", False)
+login = st.sidebar.expander("Inloggen", expanded=True)
 
 # authentication
 emailvalue = ""
@@ -31,12 +31,12 @@ if login.button("Inloggen"):
         user = auth.sign_in_with_email_and_password(email, password)
         login.success("Je bent ingelogd")
         st.session_state.login = True
+        login.expanded = False
     except:
         login.warning("Verkeerd e-mailadres of wachtwoord")
 
-# if logged in #
+# if logged in
 if st.session_state.login:
-    login.expanded = False
     st.title("Zicht op Water")
 
     # controls
@@ -58,7 +58,8 @@ if st.session_state.login:
 
     # plot
     if loc:
-        st.sidebar.plotly_chart(
+        sidebarmap = st.sidebar.expander("Kaart", expanded=True)
+        sidebarmap.plotly_chart(
             pxmap(loc),
             use_container_width=True,
         )
