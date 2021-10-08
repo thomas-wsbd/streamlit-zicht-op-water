@@ -6,6 +6,7 @@ import plotly.express as px
 # metadata
 url_docs = "https://docs.google.com/spreadsheets/d/1NJZKBFoDwH_iiS3kBj-lxRW0K6396VDI0Um43vQVfEM/export?format=csv"
 meta = pd.read_csv(url_docs, decimal=",")
+meta.imei = meta.imei.astype(str)
 
 
 def firebaseauth():
