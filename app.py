@@ -58,7 +58,10 @@ if st.session_state.login:
 
     # plot
     if loc:
-        st.plotly_chart(pxmap(loc))
+        st.plotly_chart(
+            pxmap(loc),
+            use_container_width=True,
+        )
         df = returndf(imeilist=loc, datefrom=start, dateto=end)
         if end - start > datetime.timedelta(days=14):
             df = (
