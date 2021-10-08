@@ -58,7 +58,7 @@ if st.session_state.login:
 
     # plot
     if loc:
-        st.plotly_chart(
+        st.sidebar.plotly_chart(
             pxmap(loc),
             use_container_width=True,
         )
