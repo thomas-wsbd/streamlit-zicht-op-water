@@ -95,8 +95,9 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
     return df
 
 
-def pxmap(loc, meta=meta):
+def pxmap(loc):
     m = meta[meta.imei.isin(loc)]
+    print(m)
     px.set_mapbox_access_token(st.secrets["mapboxtoken"])
     return (
         px.scatter_mapbox(
