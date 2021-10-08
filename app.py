@@ -58,6 +58,7 @@ if st.session_state.login:
 
     # plot
     if loc:
+        st.plotly_chart(pxmap(loc))
         df = returndf(imeilist=loc, datefrom=start, dateto=end)
         if end - start > datetime.timedelta(days=14):
             df = (
@@ -67,40 +68,26 @@ if st.session_state.login:
                 .reset_index()
                 .set_index("LogDate")
             )
-            fig = px.bar(
-                df,
-                color="imei",
-                title=f"Gemeten onttrokken hoeveelheden in m3/dag; {', '.join([imeitoname().get(l) for l in loc])} (imeis: {loc})",
-            ).update_layout(
-                height=600,
-                yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
-                xaxis_title=None,
-            )
+            fig = pxbardaily(df)
             if cumsum:
-                line = px.line(df.set_index([df.index, "imei"]).unstack().cumsum().stack().reset_index().set_index("LogDate"), color="imei")
-                for i in range(len(line['data'])):
+                line = pxcumsum(df)
+                for i in range(len(line["data"])):
                     fig.add_trace(line["data"][i])
             st.plotly_chart(
                 fig,
                 use_container_width=True,
             )
+            if showdf:
+                st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
         else:
-            fig = px.bar(
-                df,
-                color="imei",
-                title=f"Gemeten onttrokken hoeveelheden in m3/uur; {', '.join([imeitoname().get(l) for l in loc])} (imeis: {loc})",
-            ).update_layout(
-                height=600,
-                yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
-                xaxis_title=None,
-            )
+            fig = pxbarhourly
             if cumsum:
-                line = px.line(df.set_index([df.index, "imei"]).unstack().cumsum().stack().reset_index().set_index("LogDate"), color="imei")
-                for i in range(len(line['data'])):
+                line = pxcumsum(df)
+                for i in range(len(line["data"])):
                     fig.add_trace(line["data"][i])
             st.plotly_chart(
                 fig,
                 use_container_width=True,
             )
-        if showdf:
-            st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
+            if showdf:
+                st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
