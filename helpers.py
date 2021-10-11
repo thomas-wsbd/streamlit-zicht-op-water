@@ -113,7 +113,7 @@ def pxmap(loc):
             mapbox_style="light",
             hover_data=[
                 "imei",
-                "locatie",
+                "adres",
                 "vergunning",
                 "vermogen",
                 "bron",
