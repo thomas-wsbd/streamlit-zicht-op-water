@@ -42,7 +42,6 @@ if st.session_state.login:
     # controls
     imeis = getallimei()
     meta = returnmeta()
-    names = meta[meta.imeis.isin(imeis)]
     controls = st.sidebar.expander("Filters", expanded=True)
     loc = controls.multiselect("Locatie", options=imeis, default=[imeis[0]], format_func=lambda x: getname(x))
     start = controls.date_input(
