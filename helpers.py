@@ -122,6 +122,7 @@ def pxmap(loc):
                 "beregeningsmethode",
             ],
             zoom=12,
+            color_discrete_sequence=["DarkSlateGrey"]
         )
         .update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=300)
         .update_traces(marker=dict(size=15, symbol="drinking-water", allowoverlap=True))
