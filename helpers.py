@@ -131,6 +131,7 @@ def pxbardaily(df, loc):
         df,
         color="imei",
         title=f"Gemeten onttrokken hoeveelheden in m3/dag; {', '.join([getname(l) for l in loc])}",
+        labels=imeitoname()
     ).update_layout(
         height=600,
         yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
@@ -143,6 +144,7 @@ def pxbarhourly(df, loc):
         df,
         color="imei",
         title=f"Gemeten onttrokken hoeveelheden in m3/uur; {', '.join([getname(l) for l in loc])}",
+        labels=imeitoname()
     ).update_layout(
         height=600,
         yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
