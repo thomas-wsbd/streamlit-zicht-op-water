@@ -8,6 +8,8 @@ url_docs = "https://docs.google.com/spreadsheets/d/1NJZKBFoDwH_iiS3kBj-lxRW0K639
 meta = pd.read_csv(url_docs, decimal=",")
 meta.imei = meta.imei.astype(str)
 
+def returnmeta():
+    return meta
 
 def firebaseauth():
     # firebase config
@@ -58,11 +60,10 @@ def getallimei(access_token=gettoken()):
 
 
 def imeitoname():
-    return {
-        "358005099371707": "Frank - Eldert 001",
-        "358005099376755": "Gerard - Eldert 002",
-    }
+    return dict(zip(meta.imei, meta.naam))
 
+def getname(imei):
+    return imeitoname().get(imei)
 
 def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
     url = "https://api.mymobeye.com/api/logdata"
@@ -105,10 +106,11 @@ def pxmap(loc):
             m,
             lat="lat",
             lon="lon",
-            hover_name="imei",
+            hover_name="naam",
+            text="naam",
             mapbox_style="light",
             hover_data=[
-                "naam",
+                "imei",
                 "locatie",
                 "vergunning",
                 "vermogen",
@@ -128,7 +130,7 @@ def pxbardaily(df, loc):
     return px.bar(
         df,
         color="imei",
-        title=f"Gemeten onttrokken hoeveelheden in m3/dag; {', '.join([imeitoname().get(l) for l in loc])} (imeis: {loc})",
+        title=f"Gemeten onttrokken hoeveelheden in m3/dag; {', '.join([getname(l) for l in loc])}",
     ).update_layout(
         height=600,
         yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
@@ -140,7 +142,7 @@ def pxbarhourly(df, loc):
     return px.bar(
         df,
         color="imei",
-        title=f"Gemeten onttrokken hoeveelheden in m3/uur; {', '.join([imeitoname().get(l) for l in loc])} (imeis: {loc})",
+        title=f"Gemeten onttrokken hoeveelheden in m3/uur; {', '.join([getname(l) for l in loc])}",
     ).update_layout(
         height=600,
         yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",

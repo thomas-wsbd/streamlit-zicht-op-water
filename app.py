@@ -40,9 +40,11 @@ if st.session_state.login:
     st.title("Zicht op Water")
 
     # controls
-    locs = getallimei()
+    imeis = getallimei()
+    meta = returnmeta()
+    names = meta[meta.imeis.isin(imeis)]
     controls = st.sidebar.expander("Filters", expanded=True)
-    loc = controls.multiselect("Locatie", options=locs, default=[locs[0]])
+    loc = controls.multiselect("Locatie", options=imeis, default=[imeis[0]], format_func=lambda x: getname(x))
     start = controls.date_input(
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
