@@ -66,7 +66,7 @@ if st.session_state.login:
         df = returndf(imeilist=loc, datefrom=start, dateto=end)
         if end - start > datetime.timedelta(days=14):
             df = (
-                df.groupby("imei")
+                df.groupby("locatie")
                 .resample("d")
                 .sum()
                 .reset_index()
@@ -82,7 +82,7 @@ if st.session_state.login:
                 use_container_width=True,
             )
             if showdf:
-                st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
+                st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))
         else:
             fig = pxbarhourly(df, loc)
             if cumsum:
@@ -94,4 +94,4 @@ if st.session_state.login:
                 use_container_width=True,
             )
             if showdf:
-                st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
+                st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))

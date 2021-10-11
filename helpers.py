@@ -93,6 +93,8 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
         errors="coerce",
     )
     df.Value = df.Value / 1000  # l/uur => m3/uur
+    df.locatie = df.imei.replace(imeitoname()) # imei => locatienaam
+    df.drop(columns=["imei"], inplace=True) # drop imei
 
     return df
 
@@ -129,7 +131,7 @@ def pxmap(loc):
 def pxbardaily(df, loc):
     return px.bar(
         df,
-        color="imei",
+        color="locatie",
         title=f"Gemeten onttrokken hoeveelheden in m3/dag; {', '.join([getname(l) for l in loc])}",
         labels=imeitoname()
     ).update_layout(
@@ -142,7 +144,7 @@ def pxbardaily(df, loc):
 def pxbarhourly(df, loc):
     return px.bar(
         df,
-        color="imei",
+        color="locatie",
         title=f"Gemeten onttrokken hoeveelheden in m3/uur; {', '.join([getname(l) for l in loc])}",
         labels=imeitoname()
     ).update_layout(
@@ -154,11 +156,11 @@ def pxbarhourly(df, loc):
 
 def pxcumsum(df):
     return px.line(
-        df.set_index([df.index, "imei"])
+        df.set_index([df.index, "locatie"])
         .unstack()
         .cumsum()
         .stack()
         .reset_index()
         .set_index("LogDate"),
-        color="imei",
+        color="locatie",
     )
