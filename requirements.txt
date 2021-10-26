@@ -3,3 +3,4 @@ streamlit
 plotly
 pandas
 requests
+cffi==1.15.0
