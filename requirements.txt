@@ -3,3 +3,4 @@ streamlit
 plotly==4.14.3
 pandas==1.2.0
 requests==2.11.1
+cffi==1.15.0
