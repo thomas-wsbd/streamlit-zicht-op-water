@@ -1,5 +1,5 @@
-Pyrebase==3.0.27
-streamlit==0.87.0
-plotly==4.14.3
-pandas==1.2.0
-requests==2.11.1
+Pyrebase
+streamlit
+plotly
+pandas
+requests
