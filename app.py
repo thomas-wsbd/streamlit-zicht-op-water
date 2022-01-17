@@ -37,9 +37,9 @@ if st.session_state.login:
     st.title("Zicht op Water")
 
     # controls
-    locs = getallimei()
+    imeis = getallimei()
     controls = st.sidebar.expander("Filters", expanded=True)
-    loc = controls.multiselect("Locatie", options=locs, default=[locs[0]])
+    loc = controls.multiselect("Locatie", options=imeis, default=[imeis[0]], format_func=lambda x: getname(x))
     start = controls.date_input(
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
@@ -63,7 +63,7 @@ if st.session_state.login:
         df = returndf(imeilist=loc, datefrom=start, dateto=end)
         if end - start > datetime.timedelta(days=14):
             df = (
-                df.groupby("imei")
+                df.groupby("locatie")
                 .resample("d")
                 .sum()
                 .reset_index()
@@ -79,7 +79,7 @@ if st.session_state.login:
                 use_container_width=True,
             )
             if showdf:
-                st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
+                st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))
         else:
             fig = pxbarhourly(df, loc)
             if cumsum:
@@ -91,4 +91,4 @@ if st.session_state.login:
                 use_container_width=True,
             )
             if showdf:
-                st.table(df.pivot_table(values="Value", index=df.index, columns="imei"))
+                st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))

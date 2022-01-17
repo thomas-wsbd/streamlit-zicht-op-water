@@ -16,6 +16,9 @@ def user_login(email, passwd):
     result = requests.post(url, json=data)
     return result.ok
 
+def returnmeta():
+    return meta
+
 def firebaseauth():
     # firebase config
     firebaseConfig = {
@@ -65,11 +68,10 @@ def getallimei(access_token=gettoken()):
 
 
 def imeitoname():
-    return {
-        "358005099371707": "Frank - Eldert 001",
-        "358005099376755": "Gerard - Eldert 002",
-    }
+    return dict(zip(meta.imei, meta.naam))
 
+def getname(imei):
+    return imeitoname().get(imei)
 
 def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
     url = "https://api.mymobeye.com/api/logdata"
@@ -99,24 +101,26 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
         errors="coerce",
     )
     df.Value = df.Value / 1000  # l/uur => m3/uur
+    df['locatie'] = df.imei.replace(imeitoname()) # imei => locatienaam
+    df.drop(columns=["imei"], inplace=True) # drop imei
 
     return df
 
 
 def pxmap(loc):
     m = meta[meta.imei.isin(loc)]
-    print(m)
     px.set_mapbox_access_token(st.secrets["mapboxtoken"])
     return (
         px.scatter_mapbox(
             m,
             lat="lat",
             lon="lon",
-            hover_name="imei",
+            hover_name="naam",
+            text="naam",
             mapbox_style="light",
             hover_data=[
-                "naam",
-                "locatie",
+                "imei",
+                "adres",
                 "vergunning",
                 "vermogen",
                 "bron",
@@ -125,6 +129,7 @@ def pxmap(loc):
                 "beregeningsmethode",
             ],
             zoom=12,
+            color_discrete_sequence=["DarkSlateGrey"]
         )
         .update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=300)
         .update_traces(marker=dict(size=15, symbol="drinking-water", allowoverlap=True))
@@ -134,8 +139,8 @@ def pxmap(loc):
 def pxbardaily(df, loc):
     return px.bar(
         df,
-        color="imei",
-        title=f"Gemeten onttrokken hoeveelheden in m3/dag; {', '.join([imeitoname().get(l) for l in loc])} (imeis: {loc})",
+        color="locatie",
+        title=f"Gemeten onttrokken hoeveelheden in m3/dag; {', '.join([getname(l) for l in loc])}",
     ).update_layout(
         height=600,
         yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
@@ -146,8 +151,8 @@ def pxbardaily(df, loc):
 def pxbarhourly(df, loc):
     return px.bar(
         df,
-        color="imei",
-        title=f"Gemeten onttrokken hoeveelheden in m3/uur; {', '.join([imeitoname().get(l) for l in loc])} (imeis: {loc})",
+        color="locatie",
+        title=f"Gemeten onttrokken hoeveelheden in m3/uur; {', '.join([getname(l) for l in loc])}",
     ).update_layout(
         height=600,
         yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
@@ -157,11 +162,11 @@ def pxbarhourly(df, loc):
 
 def pxcumsum(df):
     return px.line(
-        df.set_index([df.index, "imei"])
+        df.set_index([df.index, "locatie"])
         .unstack()
         .cumsum()
         .stack()
         .reset_index()
         .set_index("LogDate"),
-        color="imei",
+        color="locatie",
     )
