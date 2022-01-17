@@ -1,4 +1,4 @@
-import requests, pyrebase
+import requests
 import pandas as pd
 import streamlit as st
 import plotly.express as px
@@ -18,23 +18,6 @@ def user_login(email, passwd):
 
 def returnmeta():
     return meta
-
-def firebaseauth():
-    # firebase config
-    firebaseConfig = {
-        "apiKey": st.secrets["apikeyfirebase"],
-        "authDomain": "users-passwords-streamlit.firebaseapp.com",
-        "projectId": "users-passwords-streamlit",
-        "databaseURL": "https://users-passwords-streamlit-default-rtdb.europe-west1.firebasedatabase.app/",
-        "storageBucket": "users-passwords-streamlit.appspot.com",
-        "messagingSenderId": "631896730641",
-        "appId": "1:631896730641:web:bb90c25404c7e1ecb555b0",
-    }
-
-    # initialize auth
-    firebase = pyrebase.initialize_app(firebaseConfig)
-    return firebase.auth()
-
 
 def gettoken():
     url = "https://api.mymobeye.com/Token"
