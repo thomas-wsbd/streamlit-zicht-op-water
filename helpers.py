@@ -8,6 +8,13 @@ url_docs = "https://docs.google.com/spreadsheets/d/1NJZKBFoDwH_iiS3kBj-lxRW0K639
 meta = pd.read_csv(url_docs, decimal=",")
 meta.imei = meta.imei.astype(str)
 
+def user_login(email, passwd):
+    url = "%s?key=%s" % ("https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword", st.secrets["apikeyfirebase"])
+    data = {"email": email,
+            "password": passwd,
+            "returnSecureToken": True}
+    result = requests.post(url, json=data)
+    return result.ok
 
 def firebaseauth():
     # firebase config

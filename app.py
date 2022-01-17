@@ -18,21 +18,18 @@ st.set_page_config(
 )
 
 # login
-auth = firebaseauth()
 login = st.sidebar.expander("Inloggen", expanded=True)
 
 # authentication
-emailvalue = ""
-passwordvalue = ""
 email = login.text_input("E-mailadres")
-password = login.text_input("Wachtwoord", type="password")
+passwd = login.text_input("Wachtwoord", type="password")
 if login.button("Inloggen"):
-    try:
-        user = auth.sign_in_with_email_and_password(email, password)
+    loginbool = user_login(email, passwd)
+    if loginbool:
         login.success("Je bent ingelogd")
         st.session_state.login = True
         login.expanded = False
-    except:
+    else:
         login.warning("Verkeerd e-mailadres of wachtwoord")
 
 # if logged in
