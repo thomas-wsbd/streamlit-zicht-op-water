@@ -61,7 +61,7 @@ if st.session_state.login:
             use_container_width=True,
         )
         df = returndf(imeilist=loc, datefrom=start, dateto=end)
-        if df == "empty":
+        if df.empty:
             st.warning("Geen data voor geselecteerde periode en/of locatie, selecteer een andere periode en/of locatie")
         else:
             if end - start > datetime.timedelta(days=14):

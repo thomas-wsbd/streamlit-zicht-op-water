@@ -70,7 +70,7 @@ def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
     r = requests.get(url, data=params, headers=header)
     df = pd.DataFrame(r.json())
     if not df.loc[0, "Values"]: # catch no data
-        return "empty"
+        return pd.DataFrame()
     df = pd.DataFrame(
         [
             {**val, **{"imei": imei}}
