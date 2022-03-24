@@ -61,34 +61,37 @@ if st.session_state.login:
             use_container_width=True,
         )
         df = returndf(imeilist=loc, datefrom=start, dateto=end)
-        if end - start > datetime.timedelta(days=14):
-            df = (
-                df.groupby("locatie")
-                .resample("d")
-                .sum()
-                .reset_index()
-                .set_index("LogDate")
-            )
-            fig = pxbardaily(df, loc)
-            if cumsum:
-                line = pxcumsum(df)
-                for i in range(len(line["data"])):
-                    fig.add_trace(line["data"][i])
-            st.plotly_chart(
-                fig,
-                use_container_width=True,
-            )
-            if showdf:
-                st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))
+        if df.empty():
+            st.error("Geen data voor geselecteerde periode")
         else:
-            fig = pxbarhourly(df, loc)
-            if cumsum:
-                line = pxcumsum(df)
-                for i in range(len(line["data"])):
-                    fig.add_trace(line["data"][i])
-            st.plotly_chart(
-                fig,
-                use_container_width=True,
-            )
-            if showdf:
-                st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))
+            if end - start > datetime.timedelta(days=14):
+                df = (
+                    df.groupby("locatie")
+                    .resample("d")
+                    .sum()
+                    .reset_index()
+                    .set_index("LogDate")
+                )
+                fig = pxbardaily(df, loc)
+                if cumsum:
+                    line = pxcumsum(df)
+                    for i in range(len(line["data"])):
+                        fig.add_trace(line["data"][i])
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True,
+                )
+                if showdf:
+                    st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))
+            else:
+                fig = pxbarhourly(df, loc)
+                if cumsum:
+                    line = pxcumsum(df)
+                    for i in range(len(line["data"])):
+                        fig.add_trace(line["data"][i])
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True,
+                )
+                if showdf:
+                    st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))
