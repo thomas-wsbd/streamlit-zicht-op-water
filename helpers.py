@@ -4,8 +4,8 @@ import streamlit as st
 import plotly.express as px
 
 # metadata
-meta = pd.read_csv("https://docs.google.com/spreadsheets/d/13CW-6mBnhabZljDL8IseTDveAqIL2Z4TwBxUhDilT6I/export?format=csv", on_bad_lines="skip", decimal=",")
-meta.dropna(subset="IMEI", inplace=True)
+meta = pd.read_csv(st.secrets["URL_DOCS"], on_bad_lines="skip", decimal=",")
+meta.dropna(subset=["IMEI"], inplace=True)
 meta.IMEI = meta.IMEI.astype(int)
 
 def user_login(email, passwd):
