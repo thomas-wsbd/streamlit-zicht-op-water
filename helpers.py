@@ -1,12 +1,12 @@
-import requests
+import requests, datetime
 import pandas as pd
 import streamlit as st
 import plotly.express as px
 
 # metadata
-url_docs = "https://docs.google.com/spreadsheets/d/1NJZKBFoDwH_iiS3kBj-lxRW0K6396VDI0Um43vQVfEM/export?format=csv"
-meta = pd.read_csv(url_docs, decimal=",")
-meta.imei = meta.imei.astype(str)
+meta = pd.read_csv("https://docs.google.com/spreadsheets/d/13CW-6mBnhabZljDL8IseTDveAqIL2Z4TwBxUhDilT6I/export?format=csv", on_bad_lines="skip", decimal=",")
+meta.dropna(subset="IMEI", inplace=True)
+meta.IMEI = meta.IMEI.astype(int)
 
 def user_login(email, passwd):
     url = "%s?key=%s" % ("https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword", st.secrets["apikeyfirebase"])
@@ -19,99 +19,56 @@ def user_login(email, passwd):
 def returnmeta():
     return meta
 
-def gettoken():
-    url = "https://api.mymobeye.com/Token"
-    params = {
-        "grant_type": "password",
-        "username": st.secrets["username"],
-        "password": st.secrets["password"],
-    }
-    r = requests.post(
-        url, data=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
-    )
-    return r.json()["access_token"]
-
-
-def getallimei(access_token=gettoken()):
-    url = "https://api.mymobeye.com/api/logdata"
-    header = {"Authorization": f"Bearer {access_token}"}
-
-    params = {
-        "ApiKey": st.secrets["apikey"],
-        "UserName": st.secrets["email"],
-        "DateFrom": (pd.Timestamp.today() - pd.Timedelta(days=1)).strftime(
-            "%Y-%m-%dT00:00:00"
-        ),
-        "DateTo": (pd.Timestamp.today()).strftime("%Y-%m-%dT00:00:00"),
-        "ImeiList": "ALL",
-    }
-
-    r = requests.get(url, data=params, headers=header)
-    return pd.DataFrame(r.json())["Imei"].to_list()
-
-
 def imeitoname():
-    return dict(zip(meta.imei, meta.naam))
+    return dict(zip(meta.IMEI, meta.Naam))
 
 def getname(imei):
     return imeitoname().get(imei)
 
-def returndf(datefrom, dateto, access_token=gettoken(), imeilist="ALL"):
-    url = "https://api.mymobeye.com/api/logdata"
-    header = {"Authorization": f"Bearer {access_token}"}
-    params = {
-        "ApiKey": st.secrets["apikey"],
-        "UserName": st.secrets["email"],
-        "DateFrom": datefrom.strftime("%Y-%m-%dT00:00:00"),
-        "DateTo": dateto.strftime("%Y-%m-%dT00:00:00"),
-        "ImeiList": imeilist,
+def format_datetime(dt):
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+def getserie(imei: int, dv: datetime.datetime, dt: datetime.datetime) -> pd.DataFrame:
+    API_KEY = st.secrets["API_KEY"]
+    BASE_URL = "https://gps.monitech.nl/api/api.php?"
+
+    json = {
+    "api": "user",
+    "key": API_KEY,
+    "cmd": f"OBJECT_GET_MESSAGES,{imei},{format_datetime(dv)},{format_datetime(dt)}"
     }
+    r = requests.get(BASE_URL, params=json)
+    
+    df = pd.DataFrame(r.json(), columns=["dt", "lat", "lon", 3, 4, 5, "data"])
+    df["dt"] = pd.to_datetime(df["dt"])
+    df.set_index("dt", inplace=True)
+    df["value"] = pd.to_numeric(df["data"].apply(lambda x: x.get("io5"))) / 10 # 1 pulse => 100 l => 0.1 m3
+    df["locatie"] = getname(imei)
+    return df[["locatie", "value"]]
 
-    r = requests.get(url, data=params, headers=header)
-    df = pd.DataFrame(r.json())
-    if not df.loc[0, "Values"]: # catch no data
-        return pd.DataFrame()
-    df = pd.DataFrame(
-        [
-            {**val, **{"imei": imei}}
-            for val, imei in zip(
-                df.explode("Values")["Values"], df.explode("Values")["Imei"]
-            )
-        ]
-    )
-    df.LogDate = pd.to_datetime(df.LogDate).dt.round("1H")
-    df.set_index("LogDate", inplace=True)
-    df.Value = pd.to_numeric(
-        [value.strip(";-").replace(",", ".") for value in df.Value.astype(str)],
-        errors="coerce",
-    )
-    df.Value = df.Value / 1000  # l/uur => m3/uur
-    df['locatie'] = df.imei.replace(imeitoname()) # imei => locatienaam
-    df.drop(columns=["imei"], inplace=True) # drop imei
-
-    return df
-
-
+def returndf(imeilist, dv, dt):
+    listdf = []
+    for imei in imeilist:
+        listdf.append(getserie(imei, dv, dt))
+    df = pd.concat(listdf).set_index("locatie", append=True)
+    df = df.groupby([pd.Grouper(level="locatie"), pd.Grouper(level="dt", freq="1H")]).sum()
+    return df.reset_index(level=0)
+    
 def pxmap(loc):
-    m = meta[meta.imei.isin(loc)]
+    m = meta[meta.IMEI.isin(loc)]
     px.set_mapbox_access_token(st.secrets["mapboxtoken"])
     return (
         px.scatter_mapbox(
             m,
             lat="lat",
             lon="lon",
-            hover_name="naam",
-            text="naam",
+            hover_name="Naam",
+            text="Naam",
             mapbox_style="light",
             hover_data=[
-                "imei",
-                "adres",
-                "vergunning",
-                "vermogen",
-                "bron",
-                "diepte",
-                "teelt",
-                "beregeningsmethode",
+                "IMEI",
+                "Klant",
+                "Locatie",
             ],
             zoom=12,
             color_discrete_sequence=["DarkSlateGrey"]
@@ -125,10 +82,10 @@ def pxbardaily(df, loc):
     return px.bar(
         df,
         color="locatie",
-        title=f"Gemeten onttrokken hoeveelheden in m3/dag; {', '.join([getname(l) for l in loc])}",
+        title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join([getname(l) for l in loc])}",
     ).update_layout(
         height=600,
-        yaxis_title="gemeten ontrokken hoeveelheid (m3/dag)",
+        yaxis_title="gemeten ontrokken hoeveelheid (m3)",
         xaxis_title=None,
     )
 
@@ -137,10 +94,10 @@ def pxbarhourly(df, loc):
     return px.bar(
         df,
         color="locatie",
-        title=f"Gemeten onttrokken hoeveelheden in m3/uur; {', '.join([getname(l) for l in loc])}",
+        title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join([getname(l) for l in loc])}",
     ).update_layout(
         height=600,
-        yaxis_title="gemeten ontrokken hoeveelheid (m3/uur)",
+        yaxis_title="gemeten ontrokken hoeveelheid (m3)",
         xaxis_title=None,
     )
 
@@ -152,6 +109,6 @@ def pxcumsum(df):
         .cumsum()
         .stack()
         .reset_index()
-        .set_index("LogDate"),
+        .set_index("dt"),
         color="locatie",
     )

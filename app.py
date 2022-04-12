@@ -37,7 +37,7 @@ if st.session_state.login:
     st.title("Zicht op Water")
 
     # controls
-    imeis = getallimei()
+    imeis = meta.IMEI
     controls = st.sidebar.expander("Filters", expanded=True)
     loc = controls.multiselect("Locatie", options=imeis, default=[imeis[0]], format_func=lambda x: getname(x))
     start = controls.date_input(
@@ -60,7 +60,7 @@ if st.session_state.login:
             pxmap(loc),
             use_container_width=True,
         )
-        df = returndf(imeilist=loc, datefrom=start, dateto=end)
+        df = returndf(imeilist=loc, dv=start, dt=end)
         if df.empty:
             st.warning("Geen data voor geselecteerde periode en/of locatie, selecteer een andere periode en/of locatie")
         else:
@@ -70,7 +70,7 @@ if st.session_state.login:
                     .resample("d")
                     .sum()
                     .reset_index()
-                    .set_index("LogDate")
+                    .set_index("dt")
                 )
                 fig = pxbardaily(df, loc)
                 if cumsum:
@@ -82,7 +82,7 @@ if st.session_state.login:
                     use_container_width=True,
                 )
                 if showdf:
-                    st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))
+                    st.table(df.pivot_table(values="value", index=df.index, columns="locatie"))
             else:
                 fig = pxbarhourly(df, loc)
                 if cumsum:
@@ -94,4 +94,4 @@ if st.session_state.login:
                     use_container_width=True,
                 )
                 if showdf:
-                    st.table(df.pivot_table(values="Value", index=df.index, columns="locatie"))
+                    st.table(df.pivot_table(values="value", index=df.index, columns="locatie"))
