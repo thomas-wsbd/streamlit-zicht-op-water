@@ -32,12 +32,17 @@ if login.button("Inloggen"):
     else:
         login.warning("Verkeerd e-mailadres of wachtwoord")
 
+meta = returnmeta()
+if email == "zichtopwater@zichtopwater.nl":
+    imeis = meta.IMEI.tolist()
+else:
+    imeis = meta.loc[meta.Mailadres == email, "IMEI"].tolist()
+
 # if logged in
 if st.session_state.login:
     st.title("Zicht op Water")
 
     # controls
-    imeis = meta.IMEI
     controls = st.sidebar.expander("Filters", expanded=True)
     loc = controls.multiselect("Locatie", options=imeis, default=[imeis[0]], format_func=lambda x: getname(x))
     start = controls.date_input(
@@ -55,12 +60,14 @@ if st.session_state.login:
 
     # plot
     if loc:
+        df = returndf(imeilist=loc, dv=start, dt=end)
+
         sidebarmap = st.sidebar.expander("Kaart", expanded=True)
         sidebarmap.plotly_chart(
             pxmap(loc),
             use_container_width=True,
         )
-        df = returndf(imeilist=loc, dv=start, dt=end)
+
         if df.empty:
             st.warning("Geen data voor geselecteerde periode en/of locatie, selecteer een andere periode en/of locatie")
         else:
@@ -72,7 +79,7 @@ if st.session_state.login:
                     .reset_index()
                     .set_index("dt")
                 )
-                fig = pxbardaily(df, loc)
+                fig = pxbardaily(df, y=loc)
                 if cumsum:
                     line = pxcumsum(df)
                     for i in range(len(line["data"])):
@@ -82,7 +89,7 @@ if st.session_state.login:
                     use_container_width=True,
                 )
                 if showdf:
-                    st.table(df.pivot_table(values="value", index=df.index, columns="locatie"))
+                    st.table(df)
             else:
                 fig = pxbarhourly(df, loc)
                 if cumsum:
@@ -94,4 +101,4 @@ if st.session_state.login:
                     use_container_width=True,
                 )
                 if showdf:
-                    st.table(df.pivot_table(values="value", index=df.index, columns="locatie"))
+                    st.table(df)

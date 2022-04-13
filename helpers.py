@@ -4,9 +4,9 @@ import streamlit as st
 import plotly.express as px
 
 # metadata
-meta = pd.read_csv(st.secrets["URL_DOCS"], on_bad_lines="skip", decimal=",")
+meta = pd.read_csv(st.secrets["URL_DOCS"], decimal=",")
 meta.dropna(subset=["IMEI"], inplace=True)
-meta.IMEI = meta.IMEI.astype(int)
+meta["IMEI"] = [imei.strip(".0") for imei in meta.IMEI.astype(str)]
 
 def user_login(email, passwd):
     url = "%s?key=%s" % ("https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword", st.secrets["apikeyfirebase"])
@@ -44,14 +44,16 @@ def getserie(imei: int, dv: datetime.datetime, dt: datetime.datetime) -> pd.Data
     df.set_index("dt", inplace=True)
     df["value"] = pd.to_numeric(df["data"].apply(lambda x: x.get("io5"))) / 10 # 1 pulse => 100 l => 0.1 m3
     df["locatie"] = getname(imei)
-    return df[["locatie", "value"]]
+    df["latlon"] = list(zip(pd.to_numeric(df["lat"]), pd.to_numeric(df["lon"])))
+    df["latlon"] = df["latlon"].astype(str)
+    return df[["locatie", "value", "latlon"]]
 
 def returndf(imeilist, dv, dt):
     listdf = []
     for imei in imeilist:
         listdf.append(getserie(imei, dv, dt))
     df = pd.concat(listdf).set_index("locatie", append=True)
-    df = df.groupby([pd.Grouper(level="locatie"), pd.Grouper(level="dt", freq="1H")]).sum()
+    df = df.groupby([pd.Grouper(level="locatie"), pd.Grouper(level="dt", freq="1H")]).agg({"value": "sum", "latlon": "first"})
     return df.reset_index(level=0)
     
 def pxmap(loc):
@@ -81,6 +83,7 @@ def pxmap(loc):
 def pxbardaily(df, loc):
     return px.bar(
         df,
+        y="value",
         color="locatie",
         title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join([getname(l) for l in loc])}",
     ).update_layout(
@@ -93,6 +96,7 @@ def pxbardaily(df, loc):
 def pxbarhourly(df, loc):
     return px.bar(
         df,
+        y="value",
         color="locatie",
         title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join([getname(l) for l in loc])}",
     ).update_layout(
@@ -104,11 +108,12 @@ def pxbarhourly(df, loc):
 
 def pxcumsum(df):
     return px.line(
-        df.set_index([df.index, "locatie"])
+        df.set_index([df.index, "locatie"])[["value"]]
         .unstack()
         .cumsum()
         .stack()
         .reset_index()
         .set_index("dt"),
+        y="value",
         color="locatie",
     )
