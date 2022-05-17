@@ -1,9 +1,14 @@
 import streamlit as st
 import plotly.express as px
+import pandas as pd
 
 import datetime
 
 from helpers import *
+from azure.storage.blob import ContainerClient
+from io import BytesIO
+
+idx = pd.IndexSlice
 
 # set session state
 if "login" not in st.session_state:
@@ -16,6 +21,18 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# get data from azure blob storage
+@st.cache(ttl=60*60, hash_funcs={"_thread.RLock": lambda _: None})
+def load_parquet():
+    container = ContainerClient.from_connection_string(conn_str=st.secrets["AZURE_CONNECTION_STRING"], container_name="zichtopwaterdb")
+    client = container.get_blob_client(blob="zichtopwaterdb.parquet")
+    bytes = BytesIO(client.download_blob().readall())
+    data = pd.read_parquet(bytes)
+    data.set_index("locatie", append=True, inplace=True)
+    data.sort_index(inplace=True)
+    return data
+data = load_parquet()
 
 # login
 login = st.sidebar.expander("Inloggen", expanded=True)
@@ -34,9 +51,9 @@ if login.button("Inloggen"):
 
 meta = returnmeta()
 if email == "zichtopwater@zichtopwater.nl":
-    imeis = meta.IMEI.tolist()
+    locs = meta.Naam.tolist()
 else:
-    imeis = meta.loc[meta.Mailadres == email, "IMEI"].tolist()
+    locs = meta.loc[meta.Mailadres == email, "Naam"].tolist()
 
 # if logged in
 if st.session_state.login:
@@ -44,7 +61,7 @@ if st.session_state.login:
 
     # controls
     controls = st.sidebar.expander("Filters", expanded=True)
-    loc = controls.multiselect("Locatie", options=imeis, default=[imeis[0]], format_func=lambda x: getname(x))
+    loc = controls.multiselect("Locatie", options=locs, default=[locs[0]])
     start = controls.date_input(
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
@@ -60,7 +77,8 @@ if st.session_state.login:
 
     # plot
     if loc:
-        df = returndf(imeilist=loc, dv=start, dt=end)
+        print(loc)
+        df = data.loc[idx[start:end, loc], :].reset_index(level=1)
 
         sidebarmap = st.sidebar.expander("Kaart", expanded=True)
         sidebarmap.plotly_chart(
@@ -89,6 +107,13 @@ if st.session_state.login:
                     use_container_width=True,
                 )
                 if showdf:
+                    st.download_button(
+                        "CSV Downloaden",
+                        df.to_csv().encode("utf-8"),
+                        "zichtopwater-metingen.csv",
+                        "text/csv",
+                        key="download-csv"
+                    )
                     st.table(df)
             else:
                 fig = pxbarhourly(df, loc)
@@ -102,3 +127,10 @@ if st.session_state.login:
                 )
                 if showdf:
                     st.table(df)
+                    st.download_button(
+                        "CSV Downloaden",
+                        df.to_csv().encode("utf-8"),
+                        "zichtopwater-metingen.csv",
+                        "text/csv",
+                        key="download-csv"
+                    )

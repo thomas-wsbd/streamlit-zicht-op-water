@@ -5,3 +5,4 @@ __pycache__
 tests.ipynb
 .DS_Store
 test-monitech-api.ipynb
+zichtopwaterdb.parquet

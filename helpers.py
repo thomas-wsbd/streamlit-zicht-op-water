@@ -5,8 +5,8 @@ import plotly.express as px
 
 # metadata
 meta = pd.read_csv(st.secrets["URL_DOCS"], decimal=",")
-meta.dropna(subset=["IMEI"], inplace=True)
-meta["IMEI"] = [imei.strip(".0") for imei in meta.IMEI.astype(str)]
+meta["IMEI"] = meta.IMEI.astype(str)
+meta["lat"], meta["lon"] = meta["lat"].astype(float), meta["lon"].astype(float)
 
 def user_login(email, passwd):
     url = "%s?key=%s" % ("https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword", st.secrets["apikeyfirebase"])
@@ -38,7 +38,6 @@ def getserie(imei: int, dv: datetime.datetime, dt: datetime.datetime) -> pd.Data
     "cmd": f"OBJECT_GET_MESSAGES,{imei},{format_datetime(dv)},{format_datetime(dt)}"
     }
     r = requests.get(BASE_URL, params=json)
-    
     df = pd.DataFrame(r.json(), columns=["dt", "lat", "lon", 3, 4, 5, "data"])
     df["dt"] = pd.to_datetime(df["dt"])
     df.set_index("dt", inplace=True)
@@ -51,13 +50,16 @@ def getserie(imei: int, dv: datetime.datetime, dt: datetime.datetime) -> pd.Data
 def returndf(imeilist, dv, dt):
     listdf = []
     for imei in imeilist:
-        listdf.append(getserie(imei, dv, dt))
+        try:
+            listdf.append(getserie(imei, dv, dt))
+        except:
+            continue
     df = pd.concat(listdf).set_index("locatie", append=True)
     df = df.groupby([pd.Grouper(level="locatie"), pd.Grouper(level="dt", freq="1H")]).agg({"value": "sum", "latlon": "first"})
     return df.reset_index(level=0)
     
 def pxmap(loc):
-    m = meta[meta.IMEI.isin(loc)]
+    m = meta[meta.Naam.isin(loc)]
     px.set_mapbox_access_token(st.secrets["mapboxtoken"])
     return (
         px.scatter_mapbox(
@@ -85,7 +87,7 @@ def pxbardaily(df, loc):
         df,
         y="value",
         color="locatie",
-        title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join([getname(l) for l in loc])}",
+        title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join(loc)}",
     ).update_layout(
         height=600,
         yaxis_title="gemeten ontrokken hoeveelheid (m3)",
@@ -98,7 +100,7 @@ def pxbarhourly(df, loc):
         df,
         y="value",
         color="locatie",
-        title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join([getname(l) for l in loc])}",
+        title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join(loc)}",
     ).update_layout(
         height=600,
         yaxis_title="gemeten ontrokken hoeveelheid (m3)",
