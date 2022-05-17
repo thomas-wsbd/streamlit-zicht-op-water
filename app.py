@@ -28,8 +28,6 @@ def load_parquet():
     client = container.get_blob_client(blob="zichtopwaterdb.parquet")
     bytes = BytesIO(client.download_blob().readall())
     data = pd.read_parquet(bytes)
-    data.set_index("locatie", append=True, inplace=True)
-    data.sort_index(inplace=True)
     return data
 data = load_parquet()
 
