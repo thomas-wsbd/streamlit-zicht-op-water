@@ -23,7 +23,6 @@ st.set_page_config(
 )
 
 # get data from azure blob storage
-@st.cache(ttl=60*60, hash_funcs={"_thread.RLock": lambda _: None})
 def load_parquet():
     container = ContainerClient.from_connection_string(conn_str=st.secrets["AZURE_CONNECTION_STRING"], container_name="zichtopwaterdb")
     client = container.get_blob_client(blob="zichtopwaterdb.parquet")
