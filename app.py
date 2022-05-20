@@ -1,5 +1,4 @@
 import streamlit as st
-import plotly.express as px
 import pandas as pd
 
 import datetime
@@ -24,7 +23,7 @@ st.set_page_config(
 
 conn_str = st.secrets["AZURE_CONNECTION_STRING"]
 # get data from azure blob storage
-@st.cache()
+@st.cache(ttl=60*60*6)
 def load_parquet(conn_str):
     container = ContainerClient.from_connection_string(conn_str=conn_str, container_name="zichtopwaterdb")
     client = container.get_blob_client(blob="zichtopwaterdb.parquet")
