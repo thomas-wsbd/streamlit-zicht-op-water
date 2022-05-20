@@ -22,14 +22,16 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+conn_str = st.secrets["AZURE_CONNECTION_STRING"]
 # get data from azure blob storage
-def load_parquet():
-    container = ContainerClient.from_connection_string(conn_str=st.secrets["AZURE_CONNECTION_STRING"], container_name="zichtopwaterdb")
+@st.cache()
+def load_parquet(conn_str):
+    container = ContainerClient.from_connection_string(conn_str=conn_str, container_name="zichtopwaterdb")
     client = container.get_blob_client(blob="zichtopwaterdb.parquet")
     bytes = BytesIO(client.download_blob().readall())
     data = pd.read_parquet(bytes)
     return data
-data = load_parquet()
+data = load_parquet(conn_str)
 
 # login
 login = st.sidebar.expander("Inloggen", expanded=True)
