@@ -5,8 +5,10 @@ import plotly.express as px
 
 # metadata
 meta = pd.read_csv(st.secrets["URL_DOCS"], decimal=",")
+meta = meta.dropna(subset=["IMEI"])
 meta["IMEI"] = meta.IMEI.astype(str)
 meta["lat"], meta["lon"] = meta["lat"].astype(float), meta["lon"].astype(float)
+meta["label"] = meta.apply(lambda x: f"{x.Naam} - {x.Locatie}" if (str(x.Locatie) != "nan") else x.Naam, axis=1)
 
 def user_login(email, passwd):
     url = "%s?key=%s" % ("https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword", st.secrets["apikeyfirebase"])
@@ -24,6 +26,9 @@ def imeitoname():
 
 def getname(imei):
     return imeitoname().get(imei)
+
+def labelnames(name):
+    return meta.set_index("Naam")["label"].to_dict().get(name)
 
 def format_datetime(dt):
     return dt.strftime("%Y-%m-%d %H:%M:%S")

@@ -59,7 +59,7 @@ if st.session_state.login:
 
     # controls
     controls = st.sidebar.expander("Filters", expanded=True)
-    loc = controls.multiselect("Locatie", options=locs, default=[locs[0]])
+    loc = controls.multiselect("Locatie", options=locs, default=[locs[0]], format_func=labelnames)
     start = controls.date_input(
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
@@ -75,7 +75,6 @@ if st.session_state.login:
 
     # plot
     if loc:
-        print(loc)
         df = data.loc[idx[start:end, loc], :].reset_index(level=1)
 
         sidebarmap = st.sidebar.expander("Kaart", expanded=True)
@@ -95,7 +94,7 @@ if st.session_state.login:
                     .reset_index()
                     .set_index("dt")
                 )
-                fig = pxbardaily(df, y=loc)
+                fig = pxbardaily(df, loc)
                 if cumsum:
                     line = pxcumsum(df)
                     for i in range(len(line["data"])):
