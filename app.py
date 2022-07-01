@@ -1,5 +1,4 @@
 import streamlit as st
-import plotly.express as px
 import pandas as pd
 
 import datetime
@@ -22,14 +21,16 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+conn_str = st.secrets["AZURE_CONNECTION_STRING"]
 # get data from azure blob storage
-def load_parquet():
-    container = ContainerClient.from_connection_string(conn_str=st.secrets["AZURE_CONNECTION_STRING"], container_name="zichtopwaterdb")
+@st.cache(ttl=60*60*6)
+def load_parquet(conn_str):
+    container = ContainerClient.from_connection_string(conn_str=conn_str, container_name="zichtopwaterdb")
     client = container.get_blob_client(blob="zichtopwaterdb.parquet")
     bytes = BytesIO(client.download_blob().readall())
     data = pd.read_parquet(bytes)
     return data
-data = load_parquet()
+data = load_parquet(conn_str)
 
 # login
 login = st.sidebar.expander("Inloggen", expanded=True)
@@ -58,7 +59,7 @@ if st.session_state.login:
 
     # controls
     controls = st.sidebar.expander("Filters", expanded=True)
-    loc = controls.multiselect("Locatie", options=locs, default=[locs[0]])
+    loc = controls.multiselect("Locatie", options=locs, default=[locs[0]], format_func=labelnames)
     start = controls.date_input(
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
@@ -96,7 +97,7 @@ if st.session_state.login:
                     .reset_index()
                     .set_index("dt")
                 )
-                fig = pxbardaily(df, y=loc)
+                fig = pxbardaily(df, loc)
                 if cumsum:
                     line = pxcumsum(df)
                     for i in range(len(line["data"])):
