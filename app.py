@@ -74,8 +74,10 @@ if st.session_state.login:
 
     # plot
     if loc:
-        print(loc)
-        df = data.loc[idx[start:end, loc], :].reset_index(level=1)
+        try:
+            df = data.loc[idx[start:end, loc], :].reset_index(level=1)
+        except:
+            st.warning("Geen data voor geselecteerde periode en/of locatie, selecteer een andere periode en/of locatie")
 
         sidebarmap = st.sidebar.expander("Kaart", expanded=True)
         sidebarmap.plotly_chart(

@@ -5,7 +5,7 @@ import plotly.express as px
 
 # metadata
 meta = pd.read_csv(st.secrets["URL_DOCS"], decimal=",")
-meta["IMEI"] = meta.IMEI.astype(str)
+meta["IMEI"] = meta.IMEI.astype(str).str.strip(".0")
 meta["lat"], meta["lon"] = meta["lat"].astype(float), meta["lon"].astype(float)
 
 def user_login(email, passwd):
