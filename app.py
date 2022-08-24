@@ -73,6 +73,11 @@ if st.session_state.login:
         "Bij een periode **kleiner dan twee weken** wordt de onttrokken hoeveelheid **per uur** gerapporteerd in m3/uur. Bij een periode **groter dan twee weken** wordt de onttrokken hoeveelheid **per dag** gerapporteerd in m3/dag."
     )
 
+    download = st.sidebar.expander("Download", expanded=True)
+    
+    if email == "zichtopwater@zichtopwater.nl":
+        download.download_button("Download alles", data.to_csv().encode("utf-8"), "zichtopwater-metingen-alles.csv", "text/csv", key="download-csv")
+
     # plot
     if loc:
         try:
@@ -127,8 +132,8 @@ if st.session_state.login:
                 )
                 if showdf:
                     st.table(df)
-                    st.download_button(
-                        "CSV Downloaden",
+            download.download_button(
+                        "Download selectie",
                         df.to_csv().encode("utf-8"),
                         "zichtopwater-metingen.csv",
                         "text/csv",
