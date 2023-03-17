@@ -7,3 +7,4 @@ config.py
 helpers_local.py
 __pycache__
 .DS_Store
+.ipynb_checkpoints
