@@ -40,46 +40,6 @@ def format_datetime(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def getserie(imei: int, dv: datetime.datetime, dt: datetime.datetime) -> pd.DataFrame:
-    API_KEY = st.secrets["API_KEY"]
-    BASE_URL = "https://gps.monitech.nl/api/api.php?"
-
-    json = {
-        "api": "user",
-        "key": API_KEY,
-        "cmd": f"OBJECT_GET_MESSAGES,{imei},{format_datetime(dv)},{format_datetime(dt)}",
-    }
-    try:
-        r = requests.get(BASE_URL, params=json)
-        r.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(e)
-        return None
-    df = pd.DataFrame(r.json(), columns=["dt", "lat", "lon", 3, 4, 5, "data"])
-    df["dt"] = pd.to_datetime(df["dt"])
-    df.set_index("dt", inplace=True)
-    df["value"] = (
-        pd.to_numeric(df["data"].apply(lambda x: x.get("io5")), errors="coerce") / 10
-    )  # 1 pulse => 100 l => 0.1 m3
-    df["locatie"] = getname(imei)
-    df["latlon"] = list(zip(pd.to_numeric(df["lat"]), pd.to_numeric(df["lon"])))
-    df["latlon"] = df["latlon"].astype(str)
-    return df[["locatie", "value", "latlon"]]
-
-
-def returndf(imeilist: list, dv: datetime, dt: datetime) -> pd.DataFrame:
-    listdf = []
-    for imei in imeilist:
-        serie = getserie(imei, dv, dt)
-        if serie is not None:
-            listdf.append(serie)
-    df = pd.concat(listdf, keys=imeilist, names=["locatie"])
-    df = df.groupby(["locatie", pd.Grouper(level="dt", freq="1H")]).agg(
-        {"value": "sum", "latlon": "first"}
-    )
-    return df.reset_index(level=0)
-
-
 def pxmap(loc: str):
     m = meta.query("Naam in @loc")
     px.set_mapbox_access_token(st.secrets["mapboxtoken"])
