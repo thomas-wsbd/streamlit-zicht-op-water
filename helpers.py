@@ -74,10 +74,10 @@ def pxbardaily(df: pd.DataFrame, loc: str):
         facet_row="var",
         title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join(loc)}",
     ).update_layout(
-        height=800,
+        height=1200,
         yaxis_title="gemeten ontrokken hoeveelheid (m3)",
         xaxis_title=None,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xachor="right", x=1),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
 
 
@@ -89,10 +89,10 @@ def pxbarhourly(df: pd.DataFrame, loc: str):
         facet_row="var",
         title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join(loc)}",
     ).update_layout(
-        height=800,
+        height=1200,
         yaxis_title="gemeten ontrokken hoeveelheid (m3)",
         xaxis_title=None,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xachor="right", x=1),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
 
 

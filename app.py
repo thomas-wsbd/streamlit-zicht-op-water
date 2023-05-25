@@ -76,9 +76,9 @@ if st.session_state.login:
     # metrics
     metrics = st.sidebar.expander("Metrics", expanded=True)
     metrics.metric(
-        label="Totaal volume",
+        label="Totaal gemeten",
         value=f"{totalsum} m³",
-        delta=f"{diffsum} m³ tov gisteren",
+        delta=f"{diffsum} m³",
     )
 
     # controls
@@ -93,22 +93,13 @@ if st.session_state.login:
     cumsum = controls.checkbox("Cumulatief toevoegen")
     showdf = controls.checkbox("Laat tabel zien")
 
-    download = st.sidebar.expander("Download", expanded=False)
-    if email == "zichtopwater@zichtopwater.nl":
-        download.download_button(
-            "Download alles",
-            data.to_csv().encode("utf-8"),
-            "zichtopwater-metingen-alles.csv",
-            "text/csv",
-            key="download-all-csv",
-        )
-
     # uitleg
     uitleg = st.sidebar.expander("Uitleg", expanded=False)
     uitleg.markdown(
         "Bij een periode **kleiner dan twee weken** wordt de onttrokken hoeveelheid **per uur** gerapporteerd in m3/uur. Bij een periode **groter dan twee weken** wordt de onttrokken hoeveelheid **per dag** gerapporteerd in m3/dag."
     )
 
+    # download
     download = st.sidebar.expander("Download", expanded=False)
 
     if email == "zichtopwater@zichtopwater.nl":
@@ -122,16 +113,24 @@ if st.session_state.login:
 
     # plot
     if loc:
-        df = data.loc[idx[start:end, loc], :]
-        variables = df.index.get_level_values("var").unique()
-        var = controls.multiselect("Variabele", options=variables, default=variables[0])
-        df = data.loc[idx[start:end, loc, var], :].reset_index(level=["locatie", "var"])
+        try:
+            df = data.loc[idx[start:end, loc], :]
+            variables = df.index.get_level_values("var").unique()
+            var = controls.multiselect(
+                "Variabele", options=variables, default=variables[0]
+            )
+            df = data.loc[idx[start:end, loc, var], :].reset_index(
+                level=["locatie", "var"]
+            )
+        except:
+            df = pd.DataFrame()
 
         sidebarmap = st.sidebar.expander("Kaart", expanded=True)
         sidebarmap.plotly_chart(
             pxmap(loc),
             use_container_width=True,
         )
+
         if df.empty:
             st.warning(
                 "Geen data voor geselecteerde periode en/of locatie, selecteer een andere periode en/of locatie"
