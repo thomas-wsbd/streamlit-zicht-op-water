@@ -3,6 +3,7 @@ import pandas as pd
 
 import datetime
 
+from numerize.numerize import numerize
 from helpers import *
 from azure.storage.blob import ContainerClient
 from io import BytesIO
@@ -12,6 +13,8 @@ idx = pd.IndexSlice
 # set session state
 if "login" not in st.session_state:
     st.session_state.login = False
+if "loginexpanded" not in st.session_state:
+    st.session_state.loginexpanded = True
 
 # page config
 st.set_page_config(
@@ -29,11 +32,13 @@ def load_parquet(conn_str):
     client = container.get_blob_client(blob="zichtopwaterdb.parquet")
     bytes = BytesIO(client.download_blob().readall())
     data = pd.read_parquet(bytes)
-    return data
-data = load_parquet(conn_str)
+    totalsum = data.sum().values[0]
+    diffsum = totalsum - data.loc[idx[:datetime.date.today() - datetime.timedelta(days=1), :], :].sum().values[0]
+    return data, numerize(totalsum), numerize(diffsum)
+data, totalsum, diffsum = load_parquet(conn_str)
 
 # login
-login = st.sidebar.expander("Inloggen", expanded=True)
+login = st.sidebar.expander("Inloggen", expanded=st.session_state.loginexpanded)
 
 # authentication
 email = login.text_input("E-mailadres")
@@ -43,7 +48,7 @@ if login.button("Inloggen"):
     if loginbool:
         login.success("Je bent ingelogd")
         st.session_state.login = True
-        login.expanded = False
+        st.session_state.loginexpanded = False
     else:
         login.warning("Verkeerd e-mailadres of wachtwoord")
 
@@ -56,6 +61,11 @@ else:
 # if logged in
 if st.session_state.login:
     st.title("Zicht op Water")
+
+    # metrics
+    metrics = st.sidebar.expander("Metrics", expanded=True)
+    metrics.metric(label="Totaal volume", value=f"{totalsum} m³", delta=f"{diffsum} m³ tov gisteren")
+    
 
     # controls
     controls = st.sidebar.expander("Filters", expanded=True)
