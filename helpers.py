@@ -2,6 +2,7 @@ import requests, datetime
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+from plotly.subplots import make_subplots
 
 # metadata
 meta = pd.read_csv(st.secrets["URL_DOCS"], decimal=",")
@@ -42,6 +43,19 @@ def format_datetime(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
+def var_to_text(var) -> str:
+    return dict(
+        ontdebiet="gemeten onttrokken hoeveelheden (m3)",
+        humext="luchtvochtigheid (%)",
+        tempext="temperatuur (C)",
+        soilmoist1="bodemvocht ondiep (%)",
+        soilmoist2="bodemvocht diep (%)",
+        soiltemp1="bodemtemperatuur ondiep (C)",
+        soiltemp2="bodemtemperatuur diep (C)",
+        precp="neerslag (mm)",
+    ).get(var)
+
+
 def pxmap(loc: str):
     m = meta.query("Naam in @loc")
     px.set_mapbox_access_token(st.secrets["mapboxtoken"])
@@ -66,34 +80,58 @@ def pxmap(loc: str):
     )
 
 
-def pxbardaily(df: pd.DataFrame, loc: str):
-    return px.bar(
-        df,
-        y="value",
-        color="locatie",
-        facet_row="var",
-        title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join(loc)}",
-    ).update_layout(
-        height=800,
-        yaxis_title="gemeten ontrokken hoeveelheid (m3)",
-        xaxis_title=None,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-    )
-
-
-def pxbarhourly(df: pd.DataFrame, loc: str):
-    return px.bar(
-        df,
-        y="value",
-        color="locatie",
-        facet_row="var",
-        title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join(loc)}",
-    ).update_layout(
-        height=800,
-        yaxis_title="gemeten ontrokken hoeveelheid (m3)",
-        xaxis_title=None,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-    )
+def pxbar(df: pd.DataFrame, loc: str):
+    vars = df["var"].unique()
+    if len(vars) == 1:
+        return px.bar(
+            df,
+            y="value",
+            color="locatie",
+            title=f"{var_to_text(vars[0])}; {', '.join(loc)}",
+        ).update_layout(
+            height=800,
+            yaxis_title=var_to_text(vars[0]),
+            xaxis_title=None,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                title_text="",
+            ),
+        )
+    else:
+        fig = make_subplots(
+            rows=len(vars),
+            cols=1,
+            subplot_titles=[var_to_text(var) for var in vars],
+        )
+        figures = []
+        for var in vars:
+            figures.append(px.bar(df[df["var"] == var], y="value", color="locatie"))
+        for i, figure in enumerate(figures):
+            for trace in range(len(figure["data"])):
+                fig.append_trace(figure["data"][trace], row=i + 1, col=1)
+        names = set()
+        fig.for_each_trace(
+            lambda trace: trace.update(showlegend=False)
+            if (trace.name in names)
+            else names.add(trace.name)
+        )
+        return fig.update_layout(
+            title=f"gemeten parameters; {', '.join(loc)}",
+            height=800,
+            xaxis_title=None,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                title_text="",
+            ),
+        )
 
 
 def pxcumsum(df: pd.DataFrame):

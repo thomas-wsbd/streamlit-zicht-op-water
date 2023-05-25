@@ -65,9 +65,9 @@ if login.button("Inloggen"):
 
 meta = returnmeta()
 if email == "zichtopwater@zichtopwater.nl":
-    locs = meta.Naam.tolist()
+    locs = sorted(meta.Naam.tolist())
 else:
-    locs = meta.loc[meta.Mailadres == email, "Naam"].tolist()
+    locs = sorted(meta.loc[meta.Mailadres == email, "Naam"].tolist())
 
 # if logged in
 if st.session_state.login:
@@ -178,7 +178,7 @@ if st.session_state.login:
                     [df_sum, df_mean],
                     axis="index",
                 )
-                fig = pxbardaily(df, loc)
+                fig = pxbar(df, loc)
                 if cumsum:
                     line = pxcumsum(df)
                     for i in range(len(line["data"])):
@@ -197,7 +197,7 @@ if st.session_state.login:
                     )
                     st.table(df)
             else:
-                fig = pxbarhourly(df, loc)
+                fig = pxbar(df, loc)
                 if cumsum:
                     line = pxcumsum(df)
                     for i in range(len(line["data"])):
