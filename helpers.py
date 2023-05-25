@@ -12,7 +12,7 @@ meta["label"] = meta.apply(
 )
 
 
-def user_login(email, passwd):
+def user_login(email: str, passwd: str) -> bool:
     url = "%s?key=%s" % (
         "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword",
         st.secrets["apikeyfirebase"],
@@ -22,64 +22,28 @@ def user_login(email, passwd):
     return result.ok
 
 
-def returnmeta():
+def returnmeta() -> pd.DataFrame:
     return meta
 
 
-def imeitoname():
+def imeitoname() -> dict:
     return dict(zip(meta.IMEI, meta.Naam))
 
 
-def getname(imei):
+def getname(imei: int) -> str:
     return imeitoname().get(imei)
 
 
-def labelnames(name):
+def labelnames(name: str) -> str:
     return meta.set_index("Naam")["label"].to_dict().get(name)
 
 
-def format_datetime(dt):
+def format_datetime(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def getserie(imei: int, dv: datetime.datetime, dt: datetime.datetime) -> pd.DataFrame:
-    API_KEY = st.secrets["API_KEY"]
-    BASE_URL = "https://gps.monitech.nl/api/api.php?"
-
-    json = {
-        "api": "user",
-        "key": API_KEY,
-        "cmd": f"OBJECT_GET_MESSAGES,{imei},{format_datetime(dv)},{format_datetime(dt)}",
-    }
-    r = requests.get(BASE_URL, params=json)
-    df = pd.DataFrame(r.json(), columns=["dt", "lat", "lon", 3, 4, 5, "data"])
-    df["dt"] = pd.to_datetime(df["dt"])
-    df.set_index("dt", inplace=True)
-    df["value"] = (
-        pd.to_numeric(df["data"].apply(lambda x: x.get("io5"))) / 10
-    )  # 1 pulse => 100 l => 0.1 m3
-    df["locatie"] = getname(imei)
-    df["latlon"] = list(zip(pd.to_numeric(df["lat"]), pd.to_numeric(df["lon"])))
-    df["latlon"] = df["latlon"].astype(str)
-    return df[["locatie", "value", "latlon"]]
-
-
-def returndf(imeilist, dv, dt):
-    listdf = []
-    for imei in imeilist:
-        try:
-            listdf.append(getserie(imei, dv, dt))
-        except:
-            continue
-    df = pd.concat(listdf).set_index("locatie", append=True)
-    df = df.groupby(
-        [pd.Grouper(level="locatie"), pd.Grouper(level="dt", freq="1H")]
-    ).agg({"value": "sum", "latlon": "first"})
-    return df.reset_index(level=0)
-
-
-def pxmap(loc):
-    m = meta[meta.Naam.isin(loc)]
+def pxmap(loc: str):
+    m = meta.query("Naam in @loc")
     px.set_mapbox_access_token(st.secrets["mapboxtoken"])
     return (
         px.scatter_mapbox(
@@ -102,37 +66,39 @@ def pxmap(loc):
     )
 
 
-def pxbardaily(df, loc):
+def pxbardaily(df: pd.DataFrame, loc: str):
     return px.bar(
         df,
         y="value",
         color="locatie",
+        facet_row="var",
         title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join(loc)}",
     ).update_layout(
-        height=600,
+        height=800,
         yaxis_title="gemeten ontrokken hoeveelheid (m3)",
         xaxis_title=None,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xachor="right", x=1),
     )
 
 
-def pxbarhourly(df, loc):
+def pxbarhourly(df: pd.DataFrame, loc: str):
     return px.bar(
         df,
         y="value",
         color="locatie",
+        facet_row="var",
         title=f"Gemeten onttrokken hoeveelheden in m3; {', '.join(loc)}",
     ).update_layout(
-        height=600,
+        height=800,
         yaxis_title="gemeten ontrokken hoeveelheid (m3)",
         xaxis_title=None,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xachor="right", x=1),
     )
 
 
-def pxcumsum(df):
+def pxcumsum(df: pd.DataFrame):
     return px.line(
-        df.set_index([df.index, "locatie"])[["value"]]
+        df.set_index([df.index, "locatie", "var"])[["value"]]
         .unstack()
         .cumsum()
         .stack()
@@ -140,4 +106,5 @@ def pxcumsum(df):
         .set_index("dt"),
         y="value",
         color="locatie",
+        facet_row="var",
     )

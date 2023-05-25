@@ -25,16 +25,27 @@ st.set_page_config(
 )
 
 conn_str = st.secrets["AZURE_CONNECTION_STRING"]
+
+
 # get data from azure blob storage
-@st.cache(ttl=60*60*6)
+@st.cache(ttl=60 * 60 * 6)
 def load_parquet(conn_str):
-    container = ContainerClient.from_connection_string(conn_str=conn_str, container_name="zichtopwaterdb")
+    container = ContainerClient.from_connection_string(
+        conn_str=conn_str, container_name="zichtopwaterdb"
+    )
     client = container.get_blob_client(blob="zichtopwaterdb.parquet")
     bytes = BytesIO(client.download_blob().readall())
     data = pd.read_parquet(bytes)
     totalsum = data.sum().values[0]
-    diffsum = totalsum - data.loc[idx[:datetime.date.today() - datetime.timedelta(days=1), :], :].sum().values[0]
+    diffsum = (
+        totalsum
+        - data.loc[idx[: datetime.date.today() - datetime.timedelta(days=1), :], :]
+        .sum()
+        .values[0]
+    )
     return data, numerize(totalsum), numerize(diffsum)
+
+
 data, totalsum, diffsum = load_parquet(conn_str)
 
 # login
@@ -64,18 +75,33 @@ if st.session_state.login:
 
     # metrics
     metrics = st.sidebar.expander("Metrics", expanded=True)
-    metrics.metric(label="Totaal volume", value=f"{totalsum} m³", delta=f"{diffsum} m³ tov gisteren")
-    
+    metrics.metric(
+        label="Totaal volume",
+        value=f"{totalsum} m³",
+        delta=f"{diffsum} m³ tov gisteren",
+    )
 
     # controls
     controls = st.sidebar.expander("Filters", expanded=True)
-    loc = controls.multiselect("Locatie", options=locs, default=[locs[0]], format_func=labelnames)
+    loc = controls.multiselect(
+        "Locatie", options=locs, default=[locs[0]], format_func=labelnames
+    )
     start = controls.date_input(
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
     end = controls.date_input("Eind datum")
     cumsum = controls.checkbox("Cumulatief toevoegen")
     showdf = controls.checkbox("Laat tabel zien")
+
+    download = st.sidebar.expander("Download", expanded=False)
+    if email == "zichtopwater@zichtopwater.nl":
+        download.download_button(
+            "Download alles",
+            data.to_csv().encode("utf-8"),
+            "zichtopwater-metingen-alles.csv",
+            "text/csv",
+            key="download-all-csv",
+        )
 
     # uitleg
     uitleg = st.sidebar.expander("Uitleg", expanded=False)
@@ -84,33 +110,74 @@ if st.session_state.login:
     )
 
     download = st.sidebar.expander("Download", expanded=False)
-    
+
     if email == "zichtopwater@zichtopwater.nl":
-        download.download_button("Download alles", data.to_csv().encode("utf-8"), "zichtopwater-metingen-alles.csv", "text/csv", key="download-all-csv")
+        download.download_button(
+            "Download alles",
+            data.to_csv().encode("utf-8"),
+            "zichtopwater-metingen-alles.csv",
+            "text/csv",
+            key="download-all-csv",
+        )
 
     # plot
     if loc:
-        try:
-            df = data.loc[idx[start:end, loc], :].reset_index(level=1)
-        except:
-            df = pd.DataFrame()
+        df = data.loc[idx[start:end, loc], :]
+        variables = df.index.get_level_values("var").unique()
+        var = controls.multiselect("Variabele", options=variables, default=variables[0])
+        df = data.loc[idx[start:end, loc, var], :].reset_index(level=["locatie", "var"])
 
         sidebarmap = st.sidebar.expander("Kaart", expanded=True)
         sidebarmap.plotly_chart(
             pxmap(loc),
             use_container_width=True,
         )
-
         if df.empty:
-            st.warning("Geen data voor geselecteerde periode en/of locatie, selecteer een andere periode en/of locatie")
+            st.warning(
+                "Geen data voor geselecteerde periode en/of locatie, selecteer een andere periode en/of locatie"
+            )
         else:
             if end - start > datetime.timedelta(days=14):
-                df = (
-                    df.groupby("locatie")
-                    .resample("d")
-                    .sum()
-                    .reset_index()
-                    .set_index("dt")
+                if any(map(lambda x: x in ["ontdebiet", "precp"], var)):
+                    df_sum = (
+                        df.loc[df["var"].isin(["ontdebiet", "precp"]),]
+                        .groupby(["locatie", "var"])
+                        .resample("d")
+                        .sum()
+                        .reset_index()
+                        .set_index("dt")
+                    )
+                else:
+                    df_sum = pd.DataFrame()
+
+                if any(
+                    map(
+                        lambda x: x
+                        in [
+                            "humext",
+                            "soilmoist1",
+                            "soilmoist2",
+                            "soiltemp1",
+                            "soiltemp2",
+                            "tempext",
+                        ],
+                        var,
+                    )
+                ):
+                    df_mean = (
+                        df.loc[~df["var"].isin(["ontdebiet", "precp"])]
+                        .groupby(["locatie", "var"])
+                        .resample("d")
+                        .mean()
+                        .reset_index()
+                        .set_index("dt")
+                    )
+                else:
+                    df_mean = pd.DataFrame()
+
+                df = pd.concat(
+                    [df_sum, df_mean],
+                    axis="index",
                 )
                 fig = pxbardaily(df, loc)
                 if cumsum:
@@ -123,11 +190,11 @@ if st.session_state.login:
                 )
                 if showdf:
                     st.download_button(
-                        "CSV Downloaden",
+                        "CSV Selectie",
                         df.to_csv().encode("utf-8"),
                         "zichtopwater-metingen.csv",
                         "text/csv",
-                        key="download-csv"
+                        key="download-csv",
                     )
                     st.table(df)
             else:
@@ -142,10 +209,10 @@ if st.session_state.login:
                 )
                 if showdf:
                     st.table(df)
-            download.download_button(
-                        "Download selectie",
+                    st.download_button(
+                        "CSV Selectie",
                         df.to_csv().encode("utf-8"),
                         "zichtopwater-metingen.csv",
                         "text/csv",
-                        key="download-select-csv"
+                        key="download-select-csv",
                     )
