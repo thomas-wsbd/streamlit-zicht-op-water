@@ -36,17 +36,17 @@ def load_parquet(conn_str):
     client = container.get_blob_client(blob="zichtopwaterdb.parquet")
     bytes = BytesIO(client.download_blob().readall())
     data = pd.read_parquet(bytes)
-    totalsum = data.sum().values[0]
-    diffsum = (
-        totalsum
-        - data.loc[idx[: datetime.date.today() - datetime.timedelta(days=1), :], :]
-        .sum()
-        .values[0]
+    total_sum = data["value"].sum()
+    diff_sum = (
+        total_sum
+        - data.loc[
+            idx[: datetime.date.today() - datetime.timedelta(days=1), :], "value"
+        ].sum()
     )
-    return data, numerize(totalsum), numerize(diffsum)
+    return data, numerize(total_sum), numerize(diff_sum)
 
 
-data, totalsum, diffsum = load_parquet(conn_str)
+data, total_sum, diff_sum = load_parquet(conn_str)
 
 # login
 login = st.sidebar.expander("Inloggen", expanded=st.session_state.loginexpanded)
@@ -55,15 +55,15 @@ login = st.sidebar.expander("Inloggen", expanded=st.session_state.loginexpanded)
 email = login.text_input("E-mailadres")
 passwd = login.text_input("Wachtwoord", type="password")
 if login.button("Inloggen"):
-    loginbool = user_login(email, passwd)
-    if loginbool:
+    login_bool = user_login(email, passwd)
+    if login_bool:
         login.success("Je bent ingelogd")
         st.session_state.login = True
         st.session_state.loginexpanded = False
     else:
         login.warning("Verkeerd e-mailadres of wachtwoord")
 
-meta = returnmeta()
+meta = return_meta()
 if email == "zichtopwater@zichtopwater.nl":
     locs = sorted(meta.Naam.tolist())
 else:
@@ -77,21 +77,21 @@ if st.session_state.login:
     metrics = st.sidebar.expander("Metrics", expanded=True)
     metrics.metric(
         label="Totaal gemeten",
-        value=f"{totalsum} m³",
-        delta=f"{diffsum} m³",
+        value=f"{total_sum} m³",
+        delta=f"{diff_sum} m³",
     )
 
     # controls
     controls = st.sidebar.expander("Filters", expanded=True)
     loc = controls.multiselect(
-        "Locatie", options=locs, default=[locs[0]], format_func=labelnames
+        "Locatie", options=locs, default=[locs[0]], format_func=label_names
     )
     start = controls.date_input(
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
     end = controls.date_input("Eind datum")
     cumsum = controls.checkbox("Cumulatief toevoegen")
-    showdf = controls.checkbox("Laat tabel zien")
+    show_df = controls.checkbox("Laat tabel zien")
 
     # uitleg
     uitleg = st.sidebar.expander("Uitleg", expanded=False)
@@ -125,8 +125,8 @@ if st.session_state.login:
         except:
             df = pd.DataFrame()
 
-        sidebarmap = st.sidebar.expander("Kaart", expanded=True)
-        sidebarmap.plotly_chart(
+        sidebar_map = st.sidebar.expander("Kaart", expanded=True)
+        sidebar_map.plotly_chart(
             pxmap(loc),
             use_container_width=True,
         )
@@ -139,7 +139,9 @@ if st.session_state.login:
             if end - start > datetime.timedelta(days=14):
                 if any(map(lambda x: x in ["ontdebiet", "precp"], var)):
                     df_sum = (
-                        df.loc[df["var"].isin(["ontdebiet", "precp"]),]
+                        df.loc[
+                            df["var"].isin(["ontdebiet", "precp"]),
+                        ]
                         .groupby(["locatie", "var"])
                         .resample("d")
                         .sum()
@@ -187,7 +189,7 @@ if st.session_state.login:
                     fig,
                     use_container_width=True,
                 )
-                if showdf:
+                if show_df:
                     st.download_button(
                         "CSV Selectie",
                         df.to_csv().encode("utf-8"),
@@ -206,7 +208,7 @@ if st.session_state.login:
                     fig,
                     use_container_width=True,
                 )
-                if showdf:
+                if show_df:
                     st.table(df)
                     st.download_button(
                         "CSV Selectie",

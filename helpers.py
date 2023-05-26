@@ -23,24 +23,12 @@ def user_login(email: str, passwd: str) -> bool:
     return result.ok
 
 
-def returnmeta() -> pd.DataFrame:
+def return_meta() -> pd.DataFrame:
     return meta
 
 
-def imeitoname() -> dict:
-    return dict(zip(meta.IMEI, meta.Naam))
-
-
-def getname(imei: int) -> str:
-    return imeitoname().get(imei)
-
-
-def labelnames(name: str) -> str:
+def label_names(name: str) -> str:
     return meta.set_index("Naam")["label"].to_dict().get(name)
-
-
-def format_datetime(dt: datetime) -> str:
-    return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def var_to_text(var) -> str:
