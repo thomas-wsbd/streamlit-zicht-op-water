@@ -35,11 +35,11 @@ def var_to_text(var) -> str:
     return dict(
         ontdebiet="gemeten onttrokken hoeveelheden (m3)",
         humext="luchtvochtigheid (%)",
-        tempext="temperatuur (C)",
+        tempext="luchttemperatuur (°C)",
         soilmoist1="bodemvocht ondiep (%)",
         soilmoist2="bodemvocht diep (%)",
-        soiltemp1="bodemtemperatuur ondiep (C)",
-        soiltemp2="bodemtemperatuur diep (C)",
+        soiltemp1="bodemtemperatuur ondiep (°C)",
+        soiltemp2="bodemtemperatuur diep (°C)",
         precp="neerslag (mm)",
     ).get(var)
 
