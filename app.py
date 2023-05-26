@@ -26,7 +26,6 @@ st.set_page_config(
 
 conn_str = st.secrets["AZURE_CONNECTION_STRING"]
 
-
 # get data from azure blob storage
 @st.cache(ttl=60 * 60 * 6)
 def load_parquet(conn_str):
@@ -47,7 +46,7 @@ def load_parquet(conn_str):
 
 
 data, total_sum, diff_sum = load_parquet(conn_str)
-
+st.sidebar.title("Zicht op Water")
 # login
 login = st.sidebar.expander("Inloggen", expanded=st.session_state.loginexpanded)
 
@@ -71,8 +70,6 @@ else:
 
 # if logged in
 if st.session_state.login:
-    st.title("Zicht op Water")
-
     # metrics
     metrics = st.sidebar.expander("Metrics", expanded=True)
     metrics.metric(
