@@ -148,10 +148,10 @@ if st.session_state.login:
 
         # metrics
         sel_total_sum = numerize(df.query("var == 'ontdebiet'")["value"].sum())
-        diff_sum = numerize(
+        sel_diff_sum = numerize(
             sel_total_sum
             - df.query("var == 'ontdebiet'")
-            .loc[idx[: datetime.date.today() - datetime.timedelta(days=1), :], "value"]
+            .loc[datetime.date.today() - datetime.timedelta(days=1), "value"]
             .sum()
         )
 
