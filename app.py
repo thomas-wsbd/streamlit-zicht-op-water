@@ -148,12 +148,15 @@ if st.session_state.login:
 
         # metrics
         sel_total_sum = numerize(df.query("var == 'ontdebiet'")["value"].sum())
-        sel_diff_sum = numerize(
-            sel_total_sum
-            - df.query("var == 'ontdebiet'")
-            .loc[(datetime.date.today() - datetime.timedelta(days=1)) :, "value"]
-            .sum()
-        )
+        try:
+            sel_diff_sum = numerize(
+                sel_total_sum
+                - df.query("var == 'ontdebiet'")
+                .loc[(datetime.date.today() - datetime.timedelta(days=1)) :]["value"]
+                .sum()
+            )
+        except:
+            sel_diff_sum = 0
 
         sidebar_map = st.sidebar.expander("Kaart", expanded=True)
         sidebar_map.plotly_chart(
