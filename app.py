@@ -82,8 +82,8 @@ if st.session_state.login:
     )
     metrics.metric(
         label="Totaal geselecteerde onttrekkingen",
-        value=f"{total_sum} m³",
-        delta=f"{diff_sum} m³",
+        value=f"{sel_total_sum} m³",
+        delta=f"{sel_diff_sum} m³",
     )
 
     # controls
@@ -96,24 +96,26 @@ if st.session_state.login:
     )
     end = controls.date_input("Eind datum")
 
-    extra = st.sidebar.expander("Extra", expanded=True)
+    extra = st.sidebar.expander("Extra", expanded=False)
     cumsum = extra.checkbox("Cumulatief toevoegen")
     show_df = extra.checkbox("Laat tabel zien")
 
     # uitleg
     uitleg = st.sidebar.expander("Uitleg", expanded=False)
     uitleg.markdown(
-        """Bij een periode **kleiner dan twee weken** wordt de variabele **per uur** gerapporteerd. Bij een periode **groter dan twee weken** wordt de variabele **per dag** gerapporteerd.  
+        """
+        Bij een periode **kleiner dan twee weken** wordt de variabele **per uur** gerapporteerd. Bij een periode **groter dan twee weken** wordt de variabele **per dag** gerapporteerd.  
         
         Er zitten verschillende variabele in dit dashboard; 
-        - ontdebiet = onttrokken hoeveelheid (m3)  
+        - ontdebiet = som van onttrokken hoeveelheid (m3)  
         - humext = luchtvochtigheid (%)  
         - tempext = luchttemperatuur (°C)  
         - soilmoist1 = bodemvocht ondiep (%)  
         - soilmoist2 = bodemvocht diep (%)  
         - soiltemp1 = bodemtemperatuur ondiep (°C)  
         - soiltemp2 = bodemtemperatuur diep (°C)  
-        - precp = neerslag (mm)"""
+        - precp = neerslagsom (mm)
+        """
     )
 
     # download
@@ -141,6 +143,15 @@ if st.session_state.login:
             )
         except:
             df = pd.DataFrame()
+
+        # metrics
+        sel_total_sum = df.query("var == 'ontdebiet'")["value"].sum()
+        diff_sum = (
+            sel_total_sum
+            - df.query("var == 'ontdebiet'")
+            .loc[idx[: datetime.date.today() - datetime.timedelta(days=1), :], "value"]
+            .sum()
+        )
 
         sidebar_map = st.sidebar.expander("Kaart", expanded=True)
         sidebar_map.plotly_chart(
