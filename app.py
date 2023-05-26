@@ -103,7 +103,17 @@ if st.session_state.login:
     # uitleg
     uitleg = st.sidebar.expander("Uitleg", expanded=False)
     uitleg.markdown(
-        "Bij een periode **kleiner dan twee weken** wordt de variabele **per uur** gerapporteerd. Bij een periode **groter dan twee weken** wordt de variabele **per dag** gerapporteerd. Er zitten verschillende variabele in dit dashboard; - ontdebiet = onttrokken hoeveelheid (m3)  - humext = luchtvochtigheid (%)  - tempext = luchttemperatuur (°C)  - soilmoist1 = bodemvocht ondiep (%)  - soilmoist2 = bodemvocht diep (%)  - soiltemp1 = bodemtemperatuur ondiep (°C)  - soiltemp2 = bodemtemperatuur diep (°C)  - precp = neerslag (mm)"
+        """Bij een periode **kleiner dan twee weken** wordt de variabele **per uur** gerapporteerd. Bij een periode **groter dan twee weken** wordt de variabele **per dag** gerapporteerd.  
+        
+        Er zitten verschillende variabele in dit dashboard; 
+        - ontdebiet = onttrokken hoeveelheid (m3)  
+        - humext = luchtvochtigheid (%)  
+        - tempext = luchttemperatuur (°C)  
+        - soilmoist1 = bodemvocht ondiep (%)  
+        - soilmoist2 = bodemvocht diep (%)  
+        - soiltemp1 = bodemtemperatuur ondiep (°C)  
+        - soiltemp2 = bodemtemperatuur diep (°C)  
+        - precp = neerslag (mm)"""
     )
 
     # download
