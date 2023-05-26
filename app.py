@@ -36,12 +36,12 @@ def load_parquet(conn_str):
     client = container.get_blob_client(blob="zichtopwaterdb.parquet")
     bytes = BytesIO(client.download_blob().readall())
     data = pd.read_parquet(bytes)
-    total_sum = data["value"].sum()
+    total_sum = data.query("var == 'ontdebiet'")["value"].sum()
     diff_sum = (
         total_sum
-        - data.loc[
-            idx[: datetime.date.today() - datetime.timedelta(days=1), :], "value"
-        ].sum()
+        - data.query("var == 'ontdebiet'")
+        .loc[idx[: datetime.date.today() - datetime.timedelta(days=1), :], "value"]
+        .sum()
     )
     return data, numerize(total_sum), numerize(diff_sum)
 
