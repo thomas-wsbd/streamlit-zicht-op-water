@@ -80,13 +80,6 @@ if st.session_state.login:
         value=f"{total_sum} m³",
         delta=f"{diff_sum} m³ tov gisteren",
     )
-    sel_total_sum = 0
-    sel_diff_sum = 0
-    metrics.metric(
-        label="Totaal geselecteerde onttrekkingen",
-        value=f"{sel_total_sum} m³",
-        delta=f"{sel_diff_sum} m³",
-    )
 
     # controls
     controls = st.sidebar.expander("Filters", expanded=True)
@@ -157,6 +150,12 @@ if st.session_state.login:
             )
         except:
             sel_diff_sum = 0
+
+        metrics.metric(
+            label="Totaal geselecteerde onttrekkingen",
+            value=f"{sel_total_sum} m³",
+            delta=f"{sel_diff_sum} m³",
+        )
 
         sidebar_map = st.sidebar.expander("Kaart", expanded=True)
         sidebar_map.plotly_chart(
