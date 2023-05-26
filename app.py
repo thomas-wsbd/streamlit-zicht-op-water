@@ -80,6 +80,8 @@ if st.session_state.login:
         value=f"{total_sum} m³",
         delta=f"{diff_sum} m³ tov gisteren",
     )
+    sel_total_sum = 0
+    sel_diff_sum = 0
     metrics.metric(
         label="Totaal geselecteerde onttrekkingen",
         value=f"{sel_total_sum} m³",
@@ -145,8 +147,8 @@ if st.session_state.login:
             df = pd.DataFrame()
 
         # metrics
-        sel_total_sum = df.query("var == 'ontdebiet'")["value"].sum()
-        diff_sum = (
+        sel_total_sum = numerize(df.query("var == 'ontdebiet'")["value"].sum())
+        diff_sum = numerize(
             sel_total_sum
             - df.query("var == 'ontdebiet'")
             .loc[idx[: datetime.date.today() - datetime.timedelta(days=1), :], "value"]
