@@ -140,21 +140,17 @@ if st.session_state.login:
             df = pd.DataFrame()
 
         # metrics
-        sel_total_sum = numerize(df.query("var == 'ontdebiet'")["value"].sum())
-        try:
-            sel_diff_sum = numerize(
-                sel_total_sum
-                - df.query("var == 'ontdebiet'")
-                .loc[(datetime.date.today() - datetime.timedelta(days=1)) :]["value"]
-                .sum()
-            )
-        except:
-            sel_diff_sum = 0
+        sel_total_sum = df.query("var == 'ontdebiet'")["value"].sum()
+        sel_diff_sum = (
+            df.query("var == 'ontdebiet'")
+            .loc[(datetime.datetime.today() - datetime.timedelta(days=1)) :]["value"]
+            .sum()
+        )
 
         metrics.metric(
-            label="Totaal geselecteerde onttrekkingen",
-            value=f"{sel_total_sum} m³",
-            delta=f"{sel_diff_sum} m³",
+            label="Totaal onttrekkingen in selectie/periode",
+            value=f"{numerize(sel_total_sum)} m³",
+            delta=f"{numerize(sel_diff_sum)} m³ tov gisteren",
         )
 
         sidebar_map = st.sidebar.expander("Kaart", expanded=True)
@@ -173,6 +169,7 @@ if st.session_state.login:
                     df_sum = (
                         df.loc[
                             df["var"].isin(["ontdebiet", "precp"]),
+                            ["var", "locatie", "value"],
                         ]
                         .groupby(["locatie", "var"])
                         .resample("d")
@@ -198,7 +195,10 @@ if st.session_state.login:
                     )
                 ):
                     df_mean = (
-                        df.loc[~df["var"].isin(["ontdebiet", "precp"])]
+                        df.loc[
+                            ~df["var"].isin(["ontdebiet", "precp"]),
+                            ["var", "locatie", "value"],
+                        ]
                         .groupby(["locatie", "var"])
                         .resample("d")
                         .mean()
