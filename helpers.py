@@ -101,7 +101,9 @@ def pxbar(df: pd.DataFrame, loc: str):
                 figures.append(px.bar(df[df["var"] == var], y="value", color="locatie"))
             else:
                 figures.append(
-                    px.scatter(df[df["var"] == var], y="value", color="locatie")
+                    px.line(
+                        df[df["var"] == var], y="value", color="locatie", markers=True
+                    )
                 )
         for i, figure in enumerate(figures):
             for trace in range(len(figure["data"])):
