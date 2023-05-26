@@ -151,7 +151,7 @@ if st.session_state.login:
         sel_diff_sum = numerize(
             sel_total_sum
             - df.query("var == 'ontdebiet'")
-            .loc[datetime.date.today() - datetime.timedelta(days=1), "value"]
+            .loc[(datetime.date.today() - datetime.timedelta(days=1)) :, "value"]
             .sum()
         )
 
