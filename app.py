@@ -90,8 +90,10 @@ if st.session_state.login:
         "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
     )
     end = controls.date_input("Eind datum")
-    cumsum = controls.checkbox("Cumulatief toevoegen")
-    show_df = controls.checkbox("Laat tabel zien")
+
+    extra = st.sidebar.expander("Extra", expanded=True)
+    cumsum = extra.checkbox("Cumulatief toevoegen")
+    show_df = extra.checkbox("Laat tabel zien")
 
     # uitleg
     uitleg = st.sidebar.expander("Uitleg", expanded=False)
