@@ -136,19 +136,23 @@ if st.session_state.login:
         except:
             df = pd.DataFrame()
 
-        # metrics
-        sel_total_sum = df.query("var == 'ontdebiet'")["value"].sum()
-        sel_diff_sum = (
-            df.query("var == 'ontdebiet'")
-            .loc[(datetime.datetime.today() - datetime.timedelta(days=1)) :, "value"]
-            .sum()
-        )
-
-        metrics.metric(
-            label="Totaal onttrekkingen in selectie/periode",
-            value=f"{numerize(sel_total_sum)} m³",
-            delta=f"{numerize(sel_diff_sum)} m³ tov gisteren",
-        )
+        try:
+            # metrics
+            sel_total_sum = df.query("var == 'ontdebiet'")["value"].sum()
+            sel_diff_sum = (
+                df.query("var == 'ontdebiet'")
+                .loc[
+                    (datetime.datetime.today() - datetime.timedelta(days=1)) :, "value"
+                ]
+                .sum()
+            )
+            metrics.metric(
+                label="Totaal onttrekkingen in selectie/periode",
+                value=f"{numerize(sel_total_sum)} m³",
+                delta=f"{numerize(sel_diff_sum)} m³ tov gisteren",
+            )
+        except:
+            print("geen metrics")
 
         sidebar_map = st.sidebar.expander("Kaart", expanded=True)
         sidebar_map.plotly_chart(
