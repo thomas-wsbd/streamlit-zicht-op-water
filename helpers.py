@@ -97,7 +97,12 @@ def pxbar(df: pd.DataFrame, loc: str):
         )
         figures = []
         for var in vars:
-            figures.append(px.bar(df[df["var"] == var], y="value", color="locatie"))
+            if var in ["ontdebiet", "precp"]:
+                figures.append(px.bar(df[df["var"] == var], y="value", color="locatie"))
+            else:
+                figures.append(
+                    px.scatter(df[df["var"] == var], y="value", color="locatie")
+                )
         for i, figure in enumerate(figures):
             for trace in range(len(figure["data"])):
                 fig.append_trace(figure["data"][trace], row=i + 1, col=1)
