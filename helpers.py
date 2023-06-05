@@ -90,29 +90,83 @@ def pxbar(df: pd.DataFrame, loc: str):
             ),
         )
     else:
-        fig = make_subplots(
-            rows=len(vars),
-            cols=1,
-            subplot_titles=[var_to_text(var) for var in vars],
-        )
+        rows = len(vars) - 2
+        titles = [
+            var_to_text("precp"),
+            "bodemvocht (%)",
+            "bodemtemperatuur (%)",
+            var_to_text("humext"),
+            var_to_text("tempext"),
+        ]
+        if "ontdebiet" in vars:
+            titles.insert(0, var_to_text("ontdebiet"))
+        fig = make_subplots(rows=rows, cols=1, subplot_titles=titles)
         figures = []
-        for var in vars:
-            if var in ["ontdebiet", "precp"]:
-                figures.append(px.bar(df[df["var"] == var], y="value", color="locatie"))
-            else:
-                figures.append(
-                    px.line(
-                        df[df["var"] == var], y="value", color="locatie", markers=True
-                    )
+        if "ontdebiet" in vars:
+            figures.append(
+                px.bar(
+                    df[df["var"] == "ontdebiet"],
+                    y="value",
+                    color="locatie",
                 )
+            )
+        if "precp" in vars:
+            figures.append(
+                px.bar(
+                    df[df["var"] == "precp"],
+                    y="value",
+                    color="locatie",
+                )
+            )
+            figures.append(
+                px.line(
+                    df[df["var"].isin(["soilmoist1", "soilmoist2"])],
+                    y="value",
+                    color="locatie",
+                    symbol="var",
+                    symbol_map={
+                        "soilmoist1": "circle",
+                        "soilmoist2": "square",
+                    },
+                    markers=True,
+                )
+            )
+            figures.append(
+                px.line(
+                    df[df["var"].isin(["soiltemp1", "soiltemp2"])],
+                    y="value",
+                    color="locatie",
+                    symbol="var",
+                    symbol_map={
+                        "soiltemp1": "circle",
+                        "soiltemp2": "square",
+                    },
+                    markers=True,
+                )
+            )
+            figures.append(
+                px.line(
+                    df[df["var"] == "humext"],
+                    y="value",
+                    color="locatie",
+                )
+            )
+            figures.append(
+                px.line(
+                    df[df["var"] == "tempext"],
+                    y="value",
+                    color="locatie",
+                )
+            )
+
         for i, figure in enumerate(figures):
             for trace in range(len(figure["data"])):
                 fig.append_trace(figure["data"][trace], row=i + 1, col=1)
         names = set()
         fig.for_each_trace(
             lambda trace: trace.update(showlegend=False)
-            if (trace.name in names)
-            else names.add(trace.name)
+            if (trace.name.split(",")[0] in names)
+            else names.add(trace.name.split(",")[0])
         )
         return fig.update_layout(
             title=f"gemeten parameters; {', '.join(loc)}",

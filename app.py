@@ -27,7 +27,7 @@ st.set_page_config(
 conn_str = st.secrets["AZURE_CONNECTION_STRING"]
 
 # get data from azure blob storage
-@st.cache(ttl=60 * 60 * 6)
+@st.cache_data(ttl=60 * 60 * 6)
 def load_parquet(conn_str):
     container = ContainerClient.from_connection_string(
         conn_str=conn_str, container_name="zichtopwaterdb"
@@ -96,17 +96,11 @@ if st.session_state.login:
     uitleg = st.sidebar.expander("Uitleg", expanded=False)
     uitleg.markdown(
         """
+        Debietmeters  
         Bij een periode **kleiner dan twee weken** wordt de variabele **per uur** gerapporteerd. Bij een periode **groter dan twee weken** wordt de variabele **per dag** gerapporteerd.  
         
-        Er zitten verschillende variabele in dit dashboard; 
-        - ontdebiet = som van onttrokken hoeveelheid (m3)  
-        - humext = luchtvochtigheid (%)  
-        - tempext = luchttemperatuur (°C)  
-        - soilmoist1 = bodemvocht ondiep (%)  
-        - soilmoist2 = bodemvocht diep (%)  
-        - soiltemp1 = bodemtemperatuur ondiep (°C)  
-        - soiltemp2 = bodemtemperatuur diep (°C)  
-        - precp = neerslagsom (mm)
+        Meetstations  
+        Meetstations bevatten verschillen parameters; luchtvochtigheid (%), luchttemperatuur (°C), bodemvocht ondiep (%), bodemvocht diep (%), bodemtemperatuur ondiep (°C), bodemtemperatuur diep (°C) en de neerslagsom (mm).
         """
     )
 
@@ -125,12 +119,7 @@ if st.session_state.login:
     # plot
     if loc:
         try:
-            df = data.loc[idx[start:end, loc], :]
-            variables = df.index.get_level_values("var").unique()
-            var = controls.multiselect(
-                "Variabele", options=variables, default=variables[0]
-            )
-            df = data.loc[idx[start:end, loc, var], :].reset_index(
+            df = data.loc[idx[start:end, loc, :], :].reset_index(
                 level=["locatie", "var"]
             )
         except:
@@ -166,7 +155,7 @@ if st.session_state.login:
             )
         else:
             if end - start > datetime.timedelta(days=14):
-                if any(map(lambda x: x in ["ontdebiet", "precp"], var)):
+                if any(map(lambda x: x in ["ontdebiet", "precp"], df.var.unique())):
                     df_sum = (
                         df.loc[
                             df["var"].isin(["ontdebiet", "precp"]),
@@ -192,7 +181,7 @@ if st.session_state.login:
                             "soiltemp2",
                             "tempext",
                         ],
-                        var,
+                        df.var.unique(),
                     )
                 ):
                     df_mean = (
