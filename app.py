@@ -123,7 +123,7 @@ if st.session_state.login:
             df = data.loc[idx[start:end, loc, :], :].reset_index(
                 level=["locatie", "var"]
             )
-            vars = df["vars"].unique()
+            vars = list(df["var"].unique())
         except:
             df = pd.DataFrame()
 
