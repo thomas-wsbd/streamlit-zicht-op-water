@@ -123,6 +123,7 @@ if st.session_state.login:
             df = data.loc[idx[start:end, loc, :], :].reset_index(
                 level=["locatie", "var"]
             )
+            vars = df["vars"].unique()
         except:
             df = pd.DataFrame()
 
@@ -156,7 +157,7 @@ if st.session_state.login:
             )
         else:
             if end - start > datetime.timedelta(days=14):
-                if any(map(lambda x: x in ["ontdebiet", "precp"], df["var"].unique())):
+                if any(map(lambda x: x in ["ontdebiet", "precp"], vars)):
                     df_sum = (
                         df.loc[
                             df["var"].isin(["ontdebiet", "precp"]),
@@ -182,7 +183,7 @@ if st.session_state.login:
                             "soiltemp2",
                             "tempext",
                         ],
-                        df["var"].unique(),
+                        vars,
                     )
                 ):
                     df_mean = (
