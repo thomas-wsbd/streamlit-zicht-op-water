@@ -26,6 +26,7 @@ st.set_page_config(
 
 conn_str = st.secrets["AZURE_CONNECTION_STRING"]
 
+
 # get data from azure blob storage
 @st.cache_data(ttl=60 * 60 * 6)
 def load_parquet(conn_str):
@@ -155,7 +156,7 @@ if st.session_state.login:
             )
         else:
             if end - start > datetime.timedelta(days=14):
-                if any(map(lambda x: x in ["ontdebiet", "precp"], df.var.unique())):
+                if any(map(lambda x: x in ["ontdebiet", "precp"], df["var"].unique())):
                     df_sum = (
                         df.loc[
                             df["var"].isin(["ontdebiet", "precp"]),
@@ -181,7 +182,7 @@ if st.session_state.login:
                             "soiltemp2",
                             "tempext",
                         ],
-                        df.var.unique(),
+                        df["var"].unique(),
                     )
                 ):
                     df_mean = (
