@@ -223,6 +223,9 @@ if st.session_state.login:
                     )
                     st.table(df)
             else:
+                df = data.loc[idx[start:end, loc, :], :].reset_index(
+                    level=["locatie", "var"]
+                )
                 fig = pxbar(df, loc)
                 if cumsum:
                     line = pxcumsum(df)
