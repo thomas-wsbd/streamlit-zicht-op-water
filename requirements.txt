@@ -2,6 +2,5 @@ streamlit
 plotly
 pandas
 requests
-cffi
 azure-storage-blob
 numerize
