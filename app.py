@@ -85,7 +85,7 @@ if st.session_state.login:
         "Locatie", options=locs, default=[locs[0]], format_func=label_names
     )
     start = controls.date_input(
-        "Start datum", value=(datetime.date.today() - datetime.timedelta(days=5))
+        "Start datum", value=(datetime.date.today() - datetime.timedelta(days=3))
     )
     end = controls.date_input("Eind datum")
 

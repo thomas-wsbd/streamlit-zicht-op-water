@@ -6,7 +6,6 @@ from plotly.subplots import make_subplots
 
 # metadata
 meta = pd.read_csv(st.secrets["URL_DOCS"], decimal=",")
-meta["IMEI"] = meta.IMEI.astype(str).str.strip(".0")
 meta["lat"], meta["lon"] = meta["lat"].astype(float), meta["lon"].astype(float)
 meta["label"] = meta.apply(
     lambda x: f"{x.Naam} - {x.Locatie}" if (str(x.Locatie) != "nan") else x.Naam, axis=1
@@ -100,7 +99,7 @@ def pxbar(df: pd.DataFrame, loc: str):
         ]
         if "ontdebiet" in vars:
             titles.insert(0, var_to_text("ontdebiet"))
-        fig = make_subplots(rows=rows, cols=1, subplot_titles=titles)
+        fig = make_subplots(rows=rows, cols=1, subplot_titles=titles, shared_xaxes=True)
         figures = []
         if "ontdebiet" in vars:
             figures.append(
@@ -126,9 +125,11 @@ def pxbar(df: pd.DataFrame, loc: str):
                     symbol="var",
                     symbol_map={
                         "soilmoist1": "circle",
-                        "soilmoist2": "square",
+                        "soilmoist2": "triangle-up",
                     },
                     markers=True,
+                ).update_traces(
+                    marker=dict(size=8, line=dict(width=2, color="DarkSlateGrey"))
                 )
             )
             figures.append(
@@ -139,9 +140,11 @@ def pxbar(df: pd.DataFrame, loc: str):
                     symbol="var",
                     symbol_map={
                         "soiltemp1": "circle",
-                        "soiltemp2": "square",
+                        "soiltemp2": "triangle-up",
                     },
                     markers=True,
+                ).update_traces(
+                    marker=dict(size=8, line=dict(width=2, color="DarkSlateGrey"))
                 )
             )
             figures.append(
@@ -168,10 +171,12 @@ def pxbar(df: pd.DataFrame, loc: str):
             if (trace.name.split(",")[0] in names)
             else names.add(trace.name.split(",")[0])
         )
+        fig.update_traces(xaxis="x1")
         return fig.update_layout(
             title=f"gemeten parameters; {', '.join(loc)}",
             height=800,
             xaxis_title=None,
+            hovermode="x unified",
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
