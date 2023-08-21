@@ -156,15 +156,13 @@ if st.session_state.login:
                 "Geen data voor geselecteerde periode en/of locatie, selecteer een andere periode en/of locatie"
             )
         else:
+            filter_list = ["ontdebiet", "precp"]
             if end - start > datetime.timedelta(days=14):
-                if any(map(lambda x: x in ["ontdebiet", "precp"], vars)):
+                if any(map(lambda x: x in filter_list, vars)):
                     df_sum = (
-                        df.loc[
-                            df["var"].isin(["ontdebiet", "precp"]),
-                            ["var", "locatie", "value"],
-                        ]
+                        df.query('var in @filter_list')
                         .groupby(["locatie", "var"])
-                        .resample("d")
+                        .resample("d")['value']
                         .sum()
                         .reset_index()
                         .set_index("dt")
@@ -187,12 +185,9 @@ if st.session_state.login:
                     )
                 ):
                     df_mean = (
-                        df.loc[
-                            ~df["var"].isin(["ontdebiet", "precp"]),
-                            ["var", "locatie", "value"],
-                        ]
+                        df.query('var not in @filter_list')
                         .groupby(["locatie", "var"])
-                        .resample("d")
+                        .resample("d")['value']
                         .mean()
                         .reset_index()
                         .set_index("dt")
