@@ -24,18 +24,13 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-conn_str = st.secrets["AZURE_CONNECTION_STRING"]
+url = st.secrets["URL_AZURE"]
 
 
 # get data from azure blob storage
 @st.cache_data(ttl=60 * 60 * 6)
-def load_parquet(conn_str):
-    container = ContainerClient.from_connection_string(
-        conn_str=conn_str, container_name="zichtopwaterdb"
-    )
-    client = container.get_blob_client(blob="zichtopwaterdb.parquet")
-    bytes = BytesIO(client.download_blob().readall())
-    data = pd.read_parquet(bytes)
+def load_parquet(url):
+    data = pd.read_parquet(url)
     total_sum = data.query("var == 'ontdebiet'")["value"].sum()
     diff_sum = (
         total_sum
@@ -46,7 +41,7 @@ def load_parquet(conn_str):
     return data, numerize(total_sum), numerize(diff_sum)
 
 
-data, total_sum, diff_sum = load_parquet(conn_str)
+data, total_sum, diff_sum = load_parquet(url)
 st.sidebar.title("Zicht op Water")
 # login
 login = st.sidebar.expander("Inloggen", expanded=st.session_state.loginexpanded)
@@ -92,7 +87,8 @@ if st.session_state.login:
     extra = st.sidebar.expander("Extra", expanded=False)
     cumsum = extra.checkbox("Cumulatief toevoegen")
     show_df = extra.checkbox("Laat tabel zien")
-
+    if email == "zichtopwater@zichtopwater.nl":
+        status_rapport = extra.checkbox("Statusrapport 🚦")
     # uitleg
     uitleg = st.sidebar.expander("Uitleg", expanded=False)
     uitleg.markdown(
@@ -105,10 +101,9 @@ if st.session_state.login:
         """
     )
 
-    # download
-    download = st.sidebar.expander("Download", expanded=False)
-
     if email == "zichtopwater@zichtopwater.nl":
+        # download
+        download = st.sidebar.expander("Download", expanded=False)
         download.download_button(
             "Download alles",
             data.to_csv().encode("utf-8"),
@@ -160,9 +155,9 @@ if st.session_state.login:
             if end - start > datetime.timedelta(days=14):
                 if any(map(lambda x: x in filter_list, vars)):
                     df_sum = (
-                        df.query('var in @filter_list')
+                        df.query("var in @filter_list")
                         .groupby(["locatie", "var"])
-                        .resample("d")['value']
+                        .resample("d")["value"]
                         .sum()
                         .reset_index()
                         .set_index("dt")
@@ -185,9 +180,9 @@ if st.session_state.login:
                     )
                 ):
                     df_mean = (
-                        df.query('var not in @filter_list')
+                        df.query("var not in @filter_list")
                         .groupby(["locatie", "var"])
-                        .resample("d")['value']
+                        .resample("d")["value"]
                         .mean()
                         .reset_index()
                         .set_index("dt")
@@ -236,3 +231,28 @@ if st.session_state.login:
                         "text/csv",
                         key="download-select-csv",
                     )
+    if status_rapport:
+        last3 = datetime.date.today() - datetime.timedelta(days=3)
+        df_status = (
+            data.query('var == "ontdebiet"')
+            .reset_index("dt")
+            .groupby(["locatie"])
+            .last()
+            .join(
+                data.query(
+                    'var == "ontdebiet" and dt > @last3 and value > 0 and value < 1'
+                )
+                .reset_index("var")["value"]
+                .groupby(["locatie"])
+                .agg(aantal_flags="count"),
+            )
+            .fillna(0)
+            .astype({"aantal_flags": "int"})
+            .sort_values(by="aantal_flags", ascending=False)
+            .drop(columns=["latlon"])
+        )
+
+        st.write(
+            df_status.style.bar(subset=["aantal_flags"]).to_html(escape=False),
+            unsafe_allow_html=True,
+        )
